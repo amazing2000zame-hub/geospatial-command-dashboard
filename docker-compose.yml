@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # Redis cache
   redis:
     image: redis:7-alpine
     container_name: geospatial-redis
@@ -14,13 +11,14 @@ services:
       timeout: 3s
       retries: 3
 
-  # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: node:20-slim
     container_name: geospatial-backend
     restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: node dist/index.js
     environment:
       - NODE_ENV=production
       - PORT=4000
@@ -31,34 +29,20 @@ services:
         condition: service_healthy
     networks:
       - geospatial
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: geospatial-frontend
-    restart: unless-stopped
-    networks:
-      - geospatial
-
-  # Nginx reverse proxy
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:alpine
     container_name: geospatial-nginx
     restart: unless-stopped
     ports:
       - "3010:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
     depends_on:
-      - frontend
       - backend
     networks:
       - geospatial

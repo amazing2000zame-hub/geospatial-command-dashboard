@@ -1,24 +1,13 @@
-FROM node:20-alpine AS builder
-
+FROM node:20-slim AS builder
 WORKDIR /app
-
-# Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install
-
-# Copy source and build
+RUN npm install --ignore-scripts
+RUN node node_modules/esbuild/install.js 2>/dev/null || true
 COPY . .
-RUN npm run build
+RUN npx vite build
 
-# Production stage - serve with nginx
 FROM nginx:alpine
-
-# Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
