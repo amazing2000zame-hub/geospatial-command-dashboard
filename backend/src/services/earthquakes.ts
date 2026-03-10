@@ -63,7 +63,7 @@ class EarthquakeService {
     if (!response.ok) {
       throw new Error(`USGS API error: ${response.status}`);
     }
-    return response.json();
+    return await response.json() as EarthquakeData;
   }
 
   async getEarthquakes(): Promise<EarthquakeData> {

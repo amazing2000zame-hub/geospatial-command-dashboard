@@ -2,9 +2,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Fix permissions
+RUN chmod -R 777 /tmp
+
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm install --ignore-scripts && npm rebuild
+RUN npm install --ignore-scripts
 
 # Copy source and build
 COPY . .

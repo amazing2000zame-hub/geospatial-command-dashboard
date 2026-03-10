@@ -68,7 +68,7 @@ class WeatherService {
       throw new Error(`NWS API error: ${response.status}`);
     }
     
-    return response.json();
+    return await response.json() as WeatherData;
   }
 
   async getAlerts(): Promise<WeatherData> {
