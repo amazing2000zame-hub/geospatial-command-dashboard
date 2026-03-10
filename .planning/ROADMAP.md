@@ -29,12 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User sees earthquake markers (sized by magnitude, color-coded) appearing on the globe and updating every 60 seconds without page refresh
   4. User sees NWS weather alert polygons (colored by severity) on the globe and can click them to see alert details
   5. Running `docker compose up` on the management VM starts the entire stack (frontend, backend, Redis) and the dashboard is accessible within 30 seconds
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Project scaffolding, Docker Compose, nginx reverse proxy, CesiumJS globe viewer
-- [ ] 01-02: Fastify backend, Redis cache, WebSocket pipeline, earthquake + weather fetchers
-- [ ] 01-03: Frontend data rendering, popups, search bar, integration testing
+- [ ] 01-01-PLAN.md -- Project scaffolding, Docker Compose (3 services), nginx reverse proxy, CesiumJS globe with terrain/lighting/atmosphere
+- [ ] 01-02-PLAN.md -- Fastify 5 backend, Redis cache, Socket.IO WebSocket, BaseFetcher pattern, USGS earthquake + NWS weather fetchers
+- [ ] 01-03-PLAN.md -- Frontend earthquake/weather rendering, Socket.IO client, click popups, layer toggles, status bar, integration testing
 
 ### Phase 2: Core Layers
 **Goal**: User sees live commercial flights, 336K ALPR cameras, speed cameras, and satellite orbits on the globe with a control panel to toggle layers on/off
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planned | - |
 | 2. Core Layers | 0/4 | Not started | - |
 | 3. Incident Layers | 0/3 | Not started | - |
 | 4. Visual Modes & Polish | 0/3 | Not started | - |
