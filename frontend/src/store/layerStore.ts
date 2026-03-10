@@ -24,6 +24,7 @@ export const LAYER_CONFIGS: LayerConfig[] = [
   { id: 'flights', displayName: 'Live Flights', group: 'live', color: '#a78bfa', defaultVisible: true, defaultEnabled: true },
   { id: 'alpr', displayName: 'ALPR Cameras', group: 'surveillance', color: '#f472b6', defaultVisible: true, defaultEnabled: true },
   { id: 'speed_cameras', displayName: 'Speed Cameras', group: 'surveillance', color: '#fb923c', defaultVisible: true, defaultEnabled: true },
+  { id: 'traffic_cameras', displayName: 'Traffic Cameras', group: 'surveillance', color: '#22c55e', defaultVisible: true, defaultEnabled: true },
   { id: 'satellites', displayName: 'Satellites', group: 'space', color: '#34d399', defaultVisible: true, defaultEnabled: true },
 ];
 

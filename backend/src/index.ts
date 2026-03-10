@@ -9,6 +9,7 @@ import { OpenSkyAuth } from './services/opensky-auth.js';
 import { OverpassSpeedCameraFetcher } from './fetchers/overpass.js';
 import { DeflockALPRFetcher } from './fetchers/deflock.js';
 import { CelesTrakFetcher } from './fetchers/celestrak.js';
+import { TrafficCamFetcher } from './fetchers/trafficcam.js';
 import type { ScheduledTask } from 'node-cron';
 
 const config = loadEnv();
@@ -29,6 +30,7 @@ const fetchers = [
   new OverpassSpeedCameraFetcher(cache, layerNs),
   new DeflockALPRFetcher(cache, layerNs),
   new CelesTrakFetcher(cache, layerNs),
+  new TrafficCamFetcher(cache, layerNs),
 ];
 
 // Start scheduler with staggered initial fetches

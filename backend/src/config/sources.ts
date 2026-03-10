@@ -49,4 +49,11 @@ export const sourceConfigs: SourceConfig[] = [
     cacheTTL: 14400,
     enabled: true,
   },
+  {
+    sourceId: 'traffic_cameras',
+    displayName: 'Traffic Cameras (DOT)',
+    interval: '0 */5 * * * *',
+    cacheTTL: 300,
+    enabled: true,
+  },
 ];

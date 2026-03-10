@@ -7,16 +7,49 @@ import { useUiStore } from '../store/uiStore';
 import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
-const LAYER_ID = 'flights';
+const LAYER_ID = 'traffic_cameras';
+const ICON_SIZE = 32;
 
-function altitudeToColor(altitudeFt: number, onGround: boolean): Cesium.Color {
-  if (onGround) return Cesium.Color.GRAY;
-  if (altitudeFt < 10_000) return Cesium.Color.LIME;
-  if (altitudeFt < 30_000) return Cesium.Color.CYAN;
-  return Cesium.Color.WHITE;
+const iconCache = new Map<string, HTMLCanvasElement>();
+
+function createCameraIcon(): HTMLCanvasElement {
+  const key = 'traffic_camera_icon';
+  if (iconCache.has(key)) return iconCache.get(key)!;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = ICON_SIZE;
+  canvas.height = ICON_SIZE;
+  const ctx = canvas.getContext('2d')!;
+  const cx = ICON_SIZE / 2;
+  const cy = ICON_SIZE / 2;
+  const r = ICON_SIZE / 2 - 2;
+
+  // Green circle background
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(34, 197, 94, 0.85)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(22, 163, 74, 1.0)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Camera lens shape (inner circle with smaller dot)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.fill();
+
+  iconCache.set(key, canvas);
+  return canvas;
 }
 
-function FlightLayer() {
+function TrafficCameraLayer() {
   const { viewer } = useCesium();
   const { data, loading, error } = useLayerData(LAYER_ID);
   const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
@@ -67,29 +100,24 @@ function FlightLayer() {
 
     collection.removeAll();
     featureMapRef.current.clear();
-    clearLayerFeatures('flight_');
+    clearLayerFeatures('traffic_cam_');
 
     if (data?.features) {
+      const icon = createCameraIcon();
+
       for (const feature of data.features) {
         if (!feature.geometry || feature.geometry.type !== 'Point' || !Array.isArray(feature.geometry.coordinates)) continue;
 
         const [lon, lat] = feature.geometry.coordinates as number[];
-        const id = feature.properties.id;
-        const altitudeFt = (feature.properties.altitudeFt as number) || 0;
-        const onGround = (feature.properties.onGround as boolean) || false;
-        const trueTrack = (feature.properties.trueTrack as number | null) ?? 0;
-        const rotationRad = -Cesium.Math.toRadians(trueTrack);
-        const color = altitudeToColor(altitudeFt, onGround);
+        const id = feature.properties.id as string;
 
         collection.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat),
-          image: '/icons/aircraft.svg',
-          width: 24,
-          height: 24,
-          rotation: rotationRad,
-          alignedAxis: Cesium.Cartesian3.UNIT_Z,
-          color,
+          image: icon,
+          width: ICON_SIZE,
+          height: ICON_SIZE,
           id,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
 
         featureMapRef.current.set(id, feature);
@@ -103,7 +131,7 @@ function FlightLayer() {
     if (!viewer.isDestroyed()) viewer.scene.requestRender();
   }, [viewer, data, setLayerStatus, setLayerUpdated]);
 
-  // Sync status from loading/error
+  // Sync loading/error status
   useEffect(() => {
     if (loading) setLayerStatus(LAYER_ID, 'loading', 0);
     if (error) setLayerStatus(LAYER_ID, 'error', 0, error);
@@ -121,4 +149,4 @@ function FlightLayer() {
   return null;
 }
 
-export default FlightLayer;
+export default TrafficCameraLayer;

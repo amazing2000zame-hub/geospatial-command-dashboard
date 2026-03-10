@@ -6,6 +6,8 @@ import FlightLayer from './components/FlightLayer';
 import ALPRLayer from './components/ALPRLayer';
 import SpeedCameraLayer from './components/SpeedCameraLayer';
 import SatelliteLayer from './components/SatelliteLayer';
+import TrafficCameraLayer from './components/TrafficCameraLayer';
+import HoverTooltip from './components/HoverTooltip';
 import SearchBarBridge from "./components/SearchBarBridge";
 import ZoomControls from "./components/ZoomControls";
 import ControlPanel from './components/ControlPanel';
@@ -31,7 +33,11 @@ function App() {
         <FlightLayer />
         <ALPRLayer />
         <SpeedCameraLayer />
+        <TrafficCameraLayer />
         <SatelliteLayer />
+
+        {/* Hover tooltip for all layers */}
+        <HoverTooltip />
 
         {/* SearchBar needs viewer access via Globe context */}
         <SearchBarBridge />

@@ -6,6 +6,7 @@ import { useLayerData } from '../hooks/useLayerData';
 import { useLayerStore } from '../store/layerStore';
 import { useUiStore } from '../store/uiStore';
 import { useCluster, isCluster } from '../hooks/useCluster';
+import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
 const LAYER_ID = 'speed_cameras';
@@ -116,6 +117,7 @@ function SpeedCameraLayer() {
 
     bc.removeAll(); lc.removeAll();
     featureMapRef.current.clear();
+    clearLayerFeatures('speed_camera_');
 
     for (const feature of clusters) {
       const [lon, lat] = feature.geometry.coordinates;
@@ -130,7 +132,9 @@ function SpeedCameraLayer() {
         const props = feature.properties as LayerFeature['properties'];
         const id = (props?.id as string) ?? `speed_${lon}_${lat}`;
         bc.add({ position, image: createSpeedCameraIcon(), width: 20, height: 20, id, disableDepthTestDistance: Number.POSITIVE_INFINITY });
-        featureMapRef.current.set(id, { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] });
+        const feat: LayerFeature = { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] };
+        featureMapRef.current.set(id, feat);
+        registerFeature(id, feat);
       }
     }
 

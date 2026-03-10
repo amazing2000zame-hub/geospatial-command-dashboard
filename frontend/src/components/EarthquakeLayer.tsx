@@ -5,6 +5,7 @@ import { useLayerData } from '../hooks/useLayerData';
 import { useLayerStore } from '../store/layerStore';
 import { useUiStore } from '../store/uiStore';
 import { magnitudeToColor, magnitudeToSize } from '../utils/cesiumHelpers';
+import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
 const LAYER_ID = 'earthquakes';
@@ -77,6 +78,7 @@ function EarthquakeLayer() {
 
     collection.removeAll();
     featureMapRef.current.clear();
+    clearLayerFeatures('eq_');
 
     if (data && data.features) {
       for (const feature of data.features) {
@@ -102,6 +104,7 @@ function EarthquakeLayer() {
         });
 
         featureMapRef.current.set(id, feature);
+        registerFeature(id, feature);
       }
     }
 

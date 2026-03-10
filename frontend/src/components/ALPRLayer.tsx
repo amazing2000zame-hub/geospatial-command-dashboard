@@ -6,6 +6,7 @@ import { useLayerData } from '../hooks/useLayerData';
 import { useLayerStore } from '../store/layerStore';
 import { useUiStore } from '../store/uiStore';
 import { useCluster, isCluster } from '../hooks/useCluster';
+import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
 const LAYER_ID = 'alpr';
@@ -126,6 +127,7 @@ function ALPRLayer() {
 
     pc.removeAll(); bc.removeAll(); lc.removeAll();
     featureMapRef.current.clear();
+    clearLayerFeatures('alpr_');
 
     for (const feature of clusters) {
       const [lon, lat] = feature.geometry.coordinates;
@@ -140,7 +142,9 @@ function ALPRLayer() {
         const props = feature.properties as LayerFeature['properties'];
         const id = (props?.id as string) ?? `alpr_${lon}_${lat}`;
         pc.add({ position, pixelSize: 6, color: POINT_COLOR, outlineColor: Cesium.Color.fromCssColorString('#991b1b'), outlineWidth: 1, id, disableDepthTestDistance: Number.POSITIVE_INFINITY });
-        featureMapRef.current.set(id, { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] });
+        const feat: LayerFeature = { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] };
+        featureMapRef.current.set(id, feat);
+        registerFeature(id, feat);
       }
     }
 

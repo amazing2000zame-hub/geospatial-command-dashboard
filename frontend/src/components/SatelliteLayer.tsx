@@ -13,6 +13,7 @@ import type { SatRec } from 'satellite.js';
 import { useLayerData } from '../hooks/useLayerData';
 import { useLayerStore } from '../store/layerStore';
 import { useUiStore } from '../store/uiStore';
+import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 import { computeOrbitPath, orbitPointsToPositions } from '../utils/orbitPath';
 
@@ -135,6 +136,7 @@ function SatelliteLayer() {
     collection.removeAll();
     satellitesRef.current.clear();
     clearOrbitPath();
+    clearLayerFeatures('sat_');
 
     if (!data?.features) return;
 
@@ -171,6 +173,7 @@ function SatelliteLayer() {
         });
 
         satellitesRef.current.set(id, { satrec, feature, billboard });
+        registerFeature(id, feature);
         count++;
       } catch { continue; }
     }
