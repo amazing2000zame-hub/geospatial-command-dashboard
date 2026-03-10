@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Globe from './components/Globe';
 import SearchBar from './components/SearchBar';
 import CoordinateDisplay from './components/CoordinateDisplay';

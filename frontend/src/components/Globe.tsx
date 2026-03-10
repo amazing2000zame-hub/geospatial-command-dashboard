@@ -4,9 +4,7 @@ import {
   Entity,
   PolygonGraphics,
   PointGraphics,
-  BillboardGraphics,
   ScreenSpaceEventHandler,
-  CameraFlyTo,
 } from 'resium';
 import {
   Cartesian3,
@@ -16,7 +14,7 @@ import {
   Math as CesiumMath,
   Ion,
   createWorldTerrainAsync,
-  Terrain,
+  ScreenSpaceEventHandler as CesiumScreenSpaceEventHandler,
 } from 'cesium';
 import type { EarthquakeData, WeatherData } from '../types';
 
@@ -40,7 +38,7 @@ function Globe({ earthquakes, weather, onMouseMove, searchTarget, onSearchComple
     if (!viewerRef.current?.cesiumElement) return;
 
     const viewer = viewerRef.current.cesiumElement;
-    const handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
+    const handler = new CesiumScreenSpaceEventHandler(viewer.scene.canvas);
 
     handler.setInputAction((movement: any) => {
       const cartesian = viewer.camera.pickEllipsoid(
