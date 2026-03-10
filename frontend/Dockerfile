@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm install --ignore-scripts && npm rebuild
 
 # Copy source and build
 COPY . .
