@@ -36,12 +36,13 @@ services:
     build:
       context: .
       dockerfile: nginx/Dockerfile
-      args:
-        VITE_CESIUM_ION_TOKEN: ${CESIUM_ION_TOKEN}
     container_name: geospatial-nginx
     restart: unless-stopped
     ports:
       - "3010:80"
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
     depends_on:
       - backend
     networks:

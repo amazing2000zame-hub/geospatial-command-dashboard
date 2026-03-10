@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback } from 'react';
+import { useRef, useMemo, useCallback, useEffect } from 'react';
 import { Viewer as ResiumViewer } from 'resium';
 import { Terrain, Viewer } from 'cesium';
 import SearchBar from './SearchBar';
@@ -12,15 +12,25 @@ function Globe() {
     [],
   );
 
-  const handleViewerReady = useCallback(() => {
-    const viewer = viewerRef.current?.cesiumElement;
-    if (!viewer) return;
-
-    viewer.scene.globe.enableLighting = true;
-    viewer.scene.requestRenderMode = true;
-    viewer.scene.maximumRenderTimeChange = Infinity;
-    viewer.scene.fog.enabled = true;
-    viewer.scene.skyAtmosphere.show = true;
+  // Configure viewer scene after mount
+  useEffect(() => {
+    let attempts = 0;
+    const configure = () => {
+      const viewer = viewerRef.current?.cesiumElement;
+      if (!viewer) {
+        attempts++;
+        if (attempts < 20) setTimeout(configure, 250);
+        return;
+      }
+      viewer.scene.globe.enableLighting = true;
+      viewer.scene.requestRenderMode = true;
+      viewer.scene.maximumRenderTimeChange = Infinity;
+      viewer.scene.fog.enabled = true;
+      if (viewer.scene.skyAtmosphere) {
+        viewer.scene.skyAtmosphere.show = true;
+      }
+    };
+    configure();
   }, []);
 
   const getViewer = useCallback((): Viewer | null => {
@@ -41,7 +51,6 @@ function Globe() {
       navigationHelpButton={false}
       infoBox={true}
       selectionIndicator={true}
-      onReady={handleViewerReady}
     >
       <SearchBar getViewer={getViewer} />
       <CoordinateDisplay getViewer={getViewer} />
