@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Cartesian3, Viewer, IonGeocoderService, GeocoderService } from 'cesium';
+import { Cartesian3, Viewer, Rectangle } from 'cesium';
 
 interface SearchBarProps {
   getViewer: () => Viewer | null;
@@ -16,30 +16,43 @@ function SearchBar({ getViewer }: SearchBarProps) {
     const viewer = getViewer();
     if (!viewer) return;
 
-    // Check if input looks like coordinates (e.g., "36.2, -120.3")
+    // Check coordinates first
     const coordMatch = trimmed.match(/^(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)$/);
     if (coordMatch) {
       const lat = parseFloat(coordMatch[1]);
       const lng = parseFloat(coordMatch[2]);
       viewer.camera.flyTo({
-        destination: Cartesian3.fromDegrees(lng, lat, 1000000),
+        destination: Cartesian3.fromDegrees(lng, lat, 500000),
         duration: 2,
       });
       setQuery('');
       return;
     }
 
-    // Use Ion Geocoder for city names
+    // Use Nominatim for geocoding (free, no API key)
     setLoading(true);
     try {
-      const geocoder: GeocoderService = new IonGeocoderService({ scene: viewer.scene });
-      const results = await geocoder.geocode(trimmed);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=1`,
+        { headers: { 'User-Agent': 'GeospatialDashboard/1.0' } }
+      );
+      const results = await res.json();
       if (results.length > 0) {
-        const result = results[0];
-        viewer.camera.flyTo({
-          destination: result.destination,
-          duration: 2,
-        });
+        const { lat, lon, boundingbox } = results[0];
+        if (boundingbox) {
+          viewer.camera.flyTo({
+            destination: Rectangle.fromDegrees(
+              parseFloat(boundingbox[2]), parseFloat(boundingbox[0]),
+              parseFloat(boundingbox[3]), parseFloat(boundingbox[1])
+            ),
+            duration: 2,
+          });
+        } else {
+          viewer.camera.flyTo({
+            destination: Cartesian3.fromDegrees(parseFloat(lon), parseFloat(lat), 500000),
+            duration: 2,
+          });
+        }
         setQuery('');
       }
     } catch (err) {
@@ -49,20 +62,14 @@ function SearchBar({ getViewer }: SearchBarProps) {
     }
   }, [query, getViewer]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
   return (
     <div className="search-bar">
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={loading ? 'Searching...' : 'Search city or lat, lng...'}
+        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        placeholder={loading ? 'Searching...' : '🔍 Search city or lat, lng...'}
         disabled={loading}
       />
     </div>

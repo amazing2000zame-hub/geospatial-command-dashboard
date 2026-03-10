@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Camera box body -->
+  <rect x="5" y="6" width="14" height="12" rx="2" fill="#f59e0b" stroke="#92400e" stroke-width="0.8"/>
+  <!-- Camera lens -->
+  <circle cx="12" cy="12" r="4" fill="#92400e"/>
+  <circle cx="12" cy="12" r="2.2" fill="#fef3c7"/>
+  <!-- Flash (top) -->
+  <rect x="8" y="4" width="8" height="2" rx="0.5" fill="#fbbf24" stroke="#92400e" stroke-width="0.5"/>
+  <!-- Lens highlight -->
+  <circle cx="11" cy="11" r="0.7" fill="#fffbeb"/>
+  <!-- Post -->
+  <rect x="11" y="18" width="2" height="3" fill="#78350f"/>
+</svg>

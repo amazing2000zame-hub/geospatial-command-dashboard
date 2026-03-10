@@ -4,16 +4,31 @@ import { createServer } from './server.js';
 import { startScheduler } from './services/scheduler.js';
 import { USGSFetcher } from './fetchers/usgs.js';
 import { NWSFetcher } from './fetchers/nws.js';
+import { OpenSkyFetcher } from './fetchers/opensky.js';
+import { OpenSkyAuth } from './services/opensky-auth.js';
+import { OverpassSpeedCameraFetcher } from './fetchers/overpass.js';
+import { DeflockALPRFetcher } from './fetchers/deflock.js';
+import { CelesTrakFetcher } from './fetchers/celestrak.js';
 import type { ScheduledTask } from 'node-cron';
 
 const config = loadEnv();
 
 const { fastify, cache, layerNs } = await createServer(config);
 
+// Create OpenSky auth manager (gracefully handles missing credentials)
+const openSkyAuth = new OpenSkyAuth(
+  config.OPENSKY_CLIENT_ID,
+  config.OPENSKY_CLIENT_SECRET,
+);
+
 // Instantiate fetchers
 const fetchers = [
   new USGSFetcher(cache, layerNs),
   new NWSFetcher(cache, layerNs, config.NWS_USER_AGENT),
+  new OpenSkyFetcher(cache, layerNs, openSkyAuth),
+  new OverpassSpeedCameraFetcher(cache, layerNs),
+  new DeflockALPRFetcher(cache, layerNs),
+  new CelesTrakFetcher(cache, layerNs),
 ];
 
 // Start scheduler with staggered initial fetches

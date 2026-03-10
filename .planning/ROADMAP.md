@@ -12,7 +12,7 @@ This roadmap delivers a self-hosted 3D geospatial command dashboard in 4 phases.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - CesiumJS globe, Fastify backend, Redis, Docker Compose, WebSocket pipeline, earthquake + weather proof-of-concept layers
+- [x] **Phase 1: Foundation** - CesiumJS globe, Fastify backend, Redis, Docker Compose, WebSocket pipeline, earthquake + weather proof-of-concept layers
 - [ ] **Phase 2: Core Layers** - Flight tracking, ALPR/speed cameras with Supercluster, satellite tracking, layer management UI
 - [ ] **Phase 3: Incident Layers** - Crime data, fire/EMS dispatch, police scanner audio, traffic incidents, time-range filtering
 - [ ] **Phase 4: Visual Modes & Polish** - Night vision/thermal/CRT shaders, wildfires, air quality, military aircraft
@@ -33,8 +33,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md -- Project scaffolding, Docker Compose (3 services), nginx reverse proxy, CesiumJS globe with terrain/lighting/atmosphere
-- [ ] 01-02-PLAN.md -- Fastify 5 backend, Redis cache, Socket.IO WebSocket, BaseFetcher pattern, USGS earthquake + NWS weather fetchers
-- [ ] 01-03-PLAN.md -- Frontend earthquake/weather rendering, Socket.IO client, click popups, layer toggles, status bar, integration testing
+- [x] 01-02-PLAN.md -- Fastify 5 backend, Redis cache, Socket.IO WebSocket, BaseFetcher pattern, USGS earthquake + NWS weather fetchers
+- [x] 01-03-PLAN.md -- Frontend earthquake/weather rendering, click popups, status bar, live data integration
 
 ### Phase 2: Core Layers
 **Goal**: User sees live commercial flights, 336K ALPR cameras, speed cameras, and satellite orbits on the globe with a control panel to toggle layers on/off
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/3 | In Progress | - |
-| 2. Core Layers | 0/4 | Not started | - |
+| 1. Foundation | 3/3 | Complete | 2026-03-10 |
+| 2. Core Layers | 0/4 | In Progress | - |
 | 3. Incident Layers | 0/3 | Not started | - |
 | 4. Visual Modes & Polish | 0/3 | Not started | - |

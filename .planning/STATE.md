@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Real-time situational awareness via a stunning 3D globe with 17+ live data layers
-**Current focus:** Phase 1: Foundation
+**Current focus:** Phase 2: Core Layers
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation)
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-03-10 -- Completed 01-02-PLAN.md (Fastify backend, Redis cache, USGS/NWS fetchers)
+Phase: 2 of 4 (Core Layers)
+Plan: 0 of 4 in current phase
+Status: Planning
+Last activity: 2026-03-10 -- Phase 1 complete, site live at :3010 with 281 earthquakes + 31 weather alerts
 
-Progress: [==░░░░░░░░] 17%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 

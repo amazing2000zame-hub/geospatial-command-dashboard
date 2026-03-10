@@ -1,46 +1,56 @@
 import { useRef, useEffect } from 'react';
-import { useCesium } from 'resium';
 import * as Cesium from 'cesium';
-import { useLayerData } from '../hooks/useLayerData';
-import { useLayerStore } from '../store/layerStore';
-import { useUiStore } from '../store/uiStore';
-import { magnitudeToColor, magnitudeToSize } from '../utils/cesiumHelpers';
-import type { LayerFeature } from '../types/geojson';
+import { LayerFeature, LayerFeatureCollection } from '../types/geojson';
 
-const LAYER_ID = 'earthquakes';
+interface FlightLayerProps {
+  viewer: Cesium.Viewer | null;
+  data: LayerFeatureCollection | null;
+  visible: boolean;
+  onSelectFeature: (feature: LayerFeature | null) => void;
+}
 
-function EarthquakeLayer() {
-  const { viewer } = useCesium();
-  const { data, loading, error } = useLayerData(LAYER_ID);
-  const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
-  const setLayerStatus = useLayerStore((s) => s.setLayerStatus);
-  const setLayerUpdated = useLayerStore((s) => s.setLayerUpdated);
-  const selectFeature = useUiStore((s) => s.selectFeature);
+/**
+ * Color an aircraft billboard by altitude band.
+ *   ground       → gray
+ *   low  <10kft  → green
+ *   mid  10-30k  → cyan
+ *   cruise >30k  → white
+ */
+function altitudeToColor(altitudeFt: number, onGround: boolean): Cesium.Color {
+  if (onGround) return Cesium.Color.GRAY;
+  if (altitudeFt < 10_000) return Cesium.Color.LIME;
+  if (altitudeFt < 30_000) return Cesium.Color.CYAN;
+  return Cesium.Color.WHITE;
+}
 
-  const collectionRef = useRef<Cesium.PointPrimitiveCollection | null>(null);
+function FlightLayer({ viewer, data, visible, onSelectFeature }: FlightLayerProps) {
+  const collectionRef = useRef<Cesium.BillboardCollection | null>(null);
   const featureMapRef = useRef<Map<string, LayerFeature>>(new Map());
   const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
 
-  // Create PointPrimitiveCollection + click handler when viewer is available
+  // Create the BillboardCollection when viewer becomes available
   useEffect(() => {
     if (!viewer) return;
 
-    const collection = new Cesium.PointPrimitiveCollection();
+    const collection = new Cesium.BillboardCollection({
+      scene: viewer.scene,
+    });
     viewer.scene.primitives.add(collection);
     collectionRef.current = collection;
 
-    // Click handler for feature selection
+    // Set up click handler
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
       const picked = viewer.scene.pick(event.position);
-      if (Cesium.defined(picked) && picked.primitive instanceof Cesium.PointPrimitive) {
+      if (Cesium.defined(picked) && picked.primitive instanceof Cesium.Billboard) {
         const id = picked.primitive.id as string;
         const feature = featureMapRef.current.get(id);
         if (feature) {
-          selectFeature(feature);
+          onSelectFeature(feature);
           return;
         }
       }
+      // Don't clear selection on miss -- let other layers handle that
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     handlerRef.current = handler;
 
@@ -57,20 +67,7 @@ function EarthquakeLayer() {
     };
   }, [viewer]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync store status with hook state
-  useEffect(() => {
-    if (loading) {
-      setLayerStatus(LAYER_ID, 'loading', 0);
-    } else if (error) {
-      setLayerStatus(LAYER_ID, 'error', 0, error);
-    } else if (data) {
-      const count = data.features?.length ?? 0;
-      setLayerStatus(LAYER_ID, 'active', count);
-      setLayerUpdated(LAYER_ID);
-    }
-  }, [data, loading, error, setLayerStatus, setLayerUpdated]);
-
-  // Update points when data changes
+  // Update billboards when data changes
   useEffect(() => {
     const collection = collectionRef.current;
     if (!collection || !viewer) return;
@@ -91,14 +88,27 @@ function EarthquakeLayer() {
         const coords = feature.geometry.coordinates as number[];
         const lon = coords[0];
         const lat = coords[1];
-        const mag = (feature.properties.mag as number) || 1;
         const id = feature.properties.id;
+
+        const altitudeFt = (feature.properties.altitudeFt as number) || 0;
+        const onGround = (feature.properties.onGround as boolean) || false;
+        const trueTrack = (feature.properties.trueTrack as number | null) ?? 0;
+
+        // Convert heading degrees to radians; CesiumJS rotation is counter-clockwise
+        // and the SVG points north (up), so we negate the track angle
+        const rotationRad = -Cesium.Math.toRadians(trueTrack);
+
+        const color = altitudeToColor(altitudeFt, onGround);
 
         collection.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat),
-          pixelSize: magnitudeToSize(mag),
-          color: magnitudeToColor(mag),
-          id: id,
+          image: '/icons/aircraft.svg',
+          width: 24,
+          height: 24,
+          rotation: rotationRad,
+          alignedAxis: Cesium.Cartesian3.UNIT_Z,
+          color,
+          id,
         });
 
         featureMapRef.current.set(id, feature);
@@ -124,4 +134,4 @@ function EarthquakeLayer() {
   return null;
 }
 
-export default EarthquakeLayer;
+export default FlightLayer;

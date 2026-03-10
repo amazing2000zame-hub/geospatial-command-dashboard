@@ -1,21 +1,27 @@
 import { useRef, useEffect } from 'react';
+import { useCesium } from 'resium';
 import * as Cesium from 'cesium';
-import { LayerFeature, LayerFeatureCollection } from '../types/geojson';
+import { useLayerData } from '../hooks/useLayerData';
+import { useLayerStore } from '../store/layerStore';
+import { useUiStore } from '../store/uiStore';
 import { severityToColor } from '../utils/cesiumHelpers';
+import type { LayerFeature, LayerFeatureCollection } from '../types/geojson';
 
-interface WeatherLayerProps {
-  viewer: Cesium.Viewer | null;
-  data: LayerFeatureCollection | null;
-  visible: boolean;
-  onSelectFeature: (feature: LayerFeature | null) => void;
-}
+const LAYER_ID = 'weather';
 
-function WeatherLayer({ viewer, data, visible, onSelectFeature }: WeatherLayerProps) {
+function WeatherLayer() {
+  const { viewer } = useCesium();
+  const { data, loading, error } = useLayerData(LAYER_ID);
+  const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
+  const setLayerStatus = useLayerStore((s) => s.setLayerStatus);
+  const setLayerUpdated = useLayerStore((s) => s.setLayerUpdated);
+  const selectFeature = useUiStore((s) => s.selectFeature);
+
   const dataSourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
-  const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
   const featuresRef = useRef<LayerFeature[]>([]);
+  const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
 
-  // Set up click handler when viewer becomes available
+  // Set up click handler when viewer is available
   useEffect(() => {
     if (!viewer) return;
 
@@ -28,17 +34,15 @@ function WeatherLayer({ viewer, data, visible, onSelectFeature }: WeatherLayerPr
         dataSourceRef.current &&
         dataSourceRef.current.entities.contains(picked.id)
       ) {
-        // Match entity back to feature by name (which we set to the feature id)
         const entityName = picked.id.name;
         const feature = featuresRef.current.find(
           (f) => f.properties.id === entityName,
         );
         if (feature) {
-          onSelectFeature(feature);
+          selectFeature(feature);
           return;
         }
       }
-      onSelectFeature(null);
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     handlerRef.current = handler;
 
@@ -55,7 +59,23 @@ function WeatherLayer({ viewer, data, visible, onSelectFeature }: WeatherLayerPr
     };
   }, [viewer]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load data when it changes
+  // Sync store status with hook state
+  useEffect(() => {
+    if (loading) {
+      setLayerStatus(LAYER_ID, 'loading', 0);
+    } else if (error) {
+      setLayerStatus(LAYER_ID, 'error', 0, error);
+    } else if (data) {
+      const validCount = data.features?.filter(
+        (f) => f.geometry !== null && f.geometry !== undefined &&
+               f.geometry.coordinates !== null && f.geometry.coordinates !== undefined
+      ).length ?? 0;
+      setLayerStatus(LAYER_ID, 'active', validCount);
+      setLayerUpdated(LAYER_ID);
+    }
+  }, [data, loading, error, setLayerStatus, setLayerUpdated]);
+
+  // Load GeoJSON data when it changes
   useEffect(() => {
     if (!viewer) return;
 
@@ -100,7 +120,6 @@ function WeatherLayer({ viewer, data, visible, onSelectFeature }: WeatherLayerPr
         // Style entities based on severity
         const entities = loadedDs.entities.values;
         for (const entity of entities) {
-          // Try to find the matching feature for this entity
           const matchingFeature = validFeatures.find(
             (f) => f.properties.id === entity.name,
           );
@@ -109,7 +128,6 @@ function WeatherLayer({ viewer, data, visible, onSelectFeature }: WeatherLayerPr
             ? (matchingFeature.properties.severity as string)
             : 'unknown';
 
-          // Set entity name to feature id for click lookup
           if (matchingFeature) {
             entity.name = matchingFeature.properties.id;
           }
