@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Project scaffolding, Docker Compose (3 services), nginx reverse proxy, CesiumJS globe with terrain/lighting/atmosphere
+- [x] 01-01-PLAN.md -- Project scaffolding, Docker Compose (3 services), nginx reverse proxy, CesiumJS globe with terrain/lighting/atmosphere
 - [ ] 01-02-PLAN.md -- Fastify 5 backend, Redis cache, Socket.IO WebSocket, BaseFetcher pattern, USGS earthquake + NWS weather fetchers
 - [ ] 01-03-PLAN.md -- Frontend earthquake/weather rendering, Socket.IO client, click popups, layer toggles, status bar, integration testing
 
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Planned | - |
+| 1. Foundation | 1/3 | In Progress | - |
 | 2. Core Layers | 0/4 | Not started | - |
 | 3. Incident Layers | 0/3 | Not started | - |
 | 4. Visual Modes & Polish | 0/3 | Not started | - |

@@ -9,13 +9,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Globe & Rendering
 
-- [ ] **GLOB-01**: User sees a photorealistic 3D globe with terrain and satellite imagery on page load
-- [ ] **GLOB-02**: User can rotate, zoom, and tilt the globe with smooth mouse/touch controls
-- [ ] **GLOB-03**: User sees day/night cycle with atmosphere rendering
+- [x] **GLOB-01**: User sees a photorealistic 3D globe with terrain and satellite imagery on page load
+- [x] **GLOB-02**: User can rotate, zoom, and tilt the globe with smooth mouse/touch controls
+- [x] **GLOB-03**: User sees day/night cycle with atmosphere rendering
 - [ ] **GLOB-04**: User can switch between visual modes: Standard, Night Vision, Thermal, CRT
 - [ ] **GLOB-05**: Visual modes apply GLSL post-processing shaders at 60fps on client GPU
-- [ ] **GLOB-06**: User can fly to specific coordinates or city via search bar
-- [ ] **GLOB-07**: User sees coordinate display (lat/lng) as cursor moves over globe
+- [x] **GLOB-06**: User can fly to specific coordinates or city via search bar
+- [x] **GLOB-07**: User sees coordinate display (lat/lng) as cursor moves over globe
 
 ### Layer Management
 
@@ -125,12 +125,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Deployment
 
-- [ ] **DEPL-01**: Entire stack deploys via single `docker compose up` command
-- [ ] **DEPL-02**: Frontend served by nginx container on port 3010
+- [x] **DEPL-01**: Entire stack deploys via single `docker compose up` command
+- [x] **DEPL-02**: Frontend served by nginx container on port 3010
 - [ ] **DEPL-03**: Backend runs on port 4010 with WebSocket support
-- [ ] **DEPL-04**: Redis container with persistent volume for cache data
-- [ ] **DEPL-05**: Environment variables for all API keys/tokens via .env file
-- [ ] **DEPL-06**: Dashboard accessible at http://192.168.1.65:3010
+- [x] **DEPL-04**: Redis container with persistent volume for cache data
+- [x] **DEPL-05**: Environment variables for all API keys/tokens via .env file
+- [x] **DEPL-06**: Dashboard accessible at http://192.168.1.65:3010
 
 ## v2 Requirements
 
@@ -173,13 +173,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GLOB-01 | Phase 1 | Pending |
-| GLOB-02 | Phase 1 | Pending |
-| GLOB-03 | Phase 1 | Pending |
+| GLOB-01 | Phase 1 | Complete |
+| GLOB-02 | Phase 1 | Complete |
+| GLOB-03 | Phase 1 | Complete |
 | GLOB-04 | Phase 4 | Pending |
 | GLOB-05 | Phase 4 | Pending |
-| GLOB-06 | Phase 1 | Pending |
-| GLOB-07 | Phase 1 | Pending |
+| GLOB-06 | Phase 1 | Complete |
+| GLOB-07 | Phase 1 | Complete |
 | LAYR-01 | Phase 2 | Pending |
 | LAYR-02 | Phase 2 | Pending |
 | LAYR-03 | Phase 2 | Pending |
@@ -238,12 +238,12 @@ Requirements for initial release. Each maps to roadmap phases.
 | BACK-05 | Phase 1 | Pending |
 | BACK-06 | Phase 1 | Pending |
 | BACK-07 | Phase 1 | Pending |
-| DEPL-01 | Phase 1 | Pending |
-| DEPL-02 | Phase 1 | Pending |
+| DEPL-01 | Phase 1 | Complete |
+| DEPL-02 | Phase 1 | Complete |
 | DEPL-03 | Phase 1 | Pending |
-| DEPL-04 | Phase 1 | Pending |
-| DEPL-05 | Phase 1 | Pending |
-| DEPL-06 | Phase 1 | Pending |
+| DEPL-04 | Phase 1 | Complete |
+| DEPL-05 | Phase 1 | Complete |
+| DEPL-06 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 71 total

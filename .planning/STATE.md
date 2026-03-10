@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-03-10 -- Roadmap created with 4 phases covering 71 requirements
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-03-10 -- Completed 01-01-PLAN.md (project scaffolding, Docker, CesiumJS globe)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [=░░░░░░░░░] 8%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 86 min
+- Total execution time: 1.4 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1 | 86 min | 86 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 86min
+- Trend: baseline
 
 *Updated after each plan completion*
 
@@ -48,6 +48,10 @@ Recent decisions affecting current work:
 - [Research]: OpenSky OAuth2 required (Basic Auth deprecated March 18, 2026) -- must implement from day one in Phase 2
 - [Research]: Use Primitive API not Entity API for dynamic layers to avoid memory leaks
 - [Research]: Supercluster in Web Worker mandatory for 336K ALPR points
+- [01-01]: Pre-built frontend (host build) instead of Docker multi-stage due to Proxmox esbuild spawn restriction
+- [01-01]: security_opt seccomp/apparmor unconfined for nginx on Proxmox
+- [01-01]: getViewer callback pattern for sharing CesiumJS viewer ref with child components
+- [01-01]: useEffect retry polling for viewer configuration (Resium onReady not in types)
 
 ### Pending Todos
 
@@ -62,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Roadmap created, ready to plan Phase 1
+Stopped at: Completed 01-01-PLAN.md
 Resume file: None
