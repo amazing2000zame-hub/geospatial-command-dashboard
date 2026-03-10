@@ -1,10 +1,10 @@
 export interface LayerFeatureProperties {
   id: string;
   layer: string;
-  label: string;
+  label: string | null;
   timestamp: number;
-  category: string;
-  severity: string;
+  category: string | null;
+  severity: number | null;
   [key: string]: unknown;
 }
 
