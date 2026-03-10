@@ -13,6 +13,8 @@ import ZoomControls from "./components/ZoomControls";
 import ControlPanel from './components/ControlPanel';
 import StatusBar from './components/StatusBar';
 import DetailPopup from './components/DetailPopup';
+import ImageryToggle from './components/ImageryToggle';
+import StreetView from './components/StreetView';
 import { useUiStore } from './store/uiStore';
 import './App.css';
 
@@ -48,6 +50,8 @@ function App() {
       <ControlPanel />
       <StatusBar />
       <DetailPopup feature={selectedFeature} onClose={handleClosePopup} />
+      <ImageryToggle />
+      <StreetView />
     </>
   );
 }

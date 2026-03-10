@@ -3,7 +3,9 @@ import { Viewer as ResiumViewer } from 'resium';
 import {
   Ion, OpenStreetMapImageryProvider, Viewer,
   Cartesian3, Cartographic, Math as CesiumMath,
-  ScreenSpaceEventHandler, ScreenSpaceEventType
+  ScreenSpaceEventHandler, ScreenSpaceEventType,
+  UrlTemplateImageryProvider,
+  ImageryLayer,
 } from 'cesium';
 import { useUiStore } from '../store/uiStore';
 
@@ -24,12 +26,37 @@ interface GlobeProps {
   children?: ReactNode;
 }
 
+// ESRI World Imagery - free satellite imagery, no API key required
+function createSatelliteProvider() {
+  return new UrlTemplateImageryProvider({
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    maximumLevel: 19,
+    credit: 'Esri, Maxar, Earthstar Geographics',
+  });
+}
+
+// ESRI Hybrid labels overlay on top of satellite
+function createHybridLabelProvider() {
+  return new UrlTemplateImageryProvider({
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+    maximumLevel: 19,
+  });
+}
+
+function createOsmProvider() {
+  return new OpenStreetMapImageryProvider({
+    url: 'https://tile.openstreetmap.org/',
+  });
+}
+
 function Globe({ children }: GlobeProps) {
   const viewerRef = useRef<{ cesiumElement: Viewer | null }>(null);
   const handlerRef = useRef<ScreenSpaceEventHandler | null>(null);
   const setCoords = useUiStore((s) => s.setCoords);
+  const imageryMode = useUiStore((s) => s.imageryMode);
+  const openStreetView = useUiStore((s) => s.openStreetView);
 
-  const osmProvider = useMemo(() => new OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/' }), []);
+  const osmProvider = useMemo(() => createOsmProvider(), []);
 
   // Configure viewer: scene settings, camera, mouse handler
   useEffect(() => {
@@ -43,11 +70,9 @@ function Globe({ children }: GlobeProps) {
       viewer.scene.fog.enabled = true;
       if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = true;
 
-      // OSM fallback when no Ion token
-      if (!Ion.defaultAccessToken) {
-        viewer.imageryLayers.removeAll();
-        viewer.imageryLayers.addImageryProvider(osmProvider);
-      }
+      // Start with satellite imagery by default
+      viewer.imageryLayers.removeAll();
+      viewer.imageryLayers.addImageryProvider(createSatelliteProvider());
 
       // Default camera: US overview
       viewer.camera.setView({
@@ -63,6 +88,16 @@ function Globe({ children }: GlobeProps) {
           setCoords({ lat: CesiumMath.toDegrees(carto.latitude), lng: CesiumMath.toDegrees(carto.longitude) });
         }
       }, ScreenSpaceEventType.MOUSE_MOVE);
+
+      // Right-click to open street view
+      handler.setInputAction((event: any) => {
+        const cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
+        if (cartesian) {
+          const carto = Cartographic.fromCartesian(cartesian);
+          openStreetView(CesiumMath.toDegrees(carto.latitude), CesiumMath.toDegrees(carto.longitude));
+        }
+      }, ScreenSpaceEventType.RIGHT_CLICK);
+
       handlerRef.current = handler;
     };
     configure();
@@ -74,6 +109,33 @@ function Globe({ children }: GlobeProps) {
       }
     };
   }, [osmProvider, setCoords]);
+
+  // Switch imagery mode
+  useEffect(() => {
+    const viewer = viewerRef.current?.cesiumElement;
+    if (!viewer || viewer.isDestroyed()) return;
+
+    viewer.imageryLayers.removeAll();
+
+    switch (imageryMode) {
+      case 'satellite':
+        viewer.imageryLayers.addImageryProvider(createSatelliteProvider());
+        break;
+      case 'hybrid': {
+        viewer.imageryLayers.addImageryProvider(createSatelliteProvider());
+        const labelLayer = new ImageryLayer(createHybridLabelProvider());
+        labelLayer.alpha = 0.8;
+        viewer.imageryLayers.add(labelLayer);
+        break;
+      }
+      case 'map':
+      default:
+        viewer.imageryLayers.addImageryProvider(osmProvider);
+        break;
+    }
+
+    viewer.scene.requestRender();
+  }, [imageryMode, osmProvider]);
 
   const getViewer = useCallback((): Viewer | null => viewerRef.current?.cesiumElement ?? null, []);
 

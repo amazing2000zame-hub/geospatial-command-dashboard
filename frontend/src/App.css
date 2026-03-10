@@ -189,6 +189,122 @@ html, body, #root {
   background: rgba(34, 197, 94, 0.25);
 }
 
+/* ── Imagery Toggle ── */
+
+.imagery-toggle {
+  position: fixed;
+  bottom: 40px;
+  right: 10px;
+  display: flex;
+  gap: 2px;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  padding: 3px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid #444;
+}
+
+.imagery-toggle__btn {
+  padding: 4px 10px;
+  background: transparent;
+  color: #aaa;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.imagery-toggle__btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.imagery-toggle__btn--active {
+  background: rgba(77, 166, 255, 0.25);
+  color: #4da6ff;
+}
+
+/* ── Street View Panel ── */
+
+.street-view-panel {
+  position: fixed;
+  bottom: 40px;
+  left: 300px;
+  width: 480px;
+  height: 360px;
+  background: rgba(15, 15, 25, 0.95);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 2000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+}
+
+.street-view-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid #333;
+}
+
+.street-view-panel__title {
+  color: #aaa;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.street-view-panel__close {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.street-view-panel__close:hover {
+  color: #fff;
+}
+
+.street-view-panel__content {
+  flex: 1;
+  position: relative;
+}
+
+.street-view-panel__iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.street-view-panel__footer {
+  display: flex;
+  gap: 12px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 1px solid #333;
+}
+
+.street-view-panel__link {
+  color: #4da6ff;
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.street-view-panel__link:hover {
+  text-decoration: underline;
+}
+
 /* ── Animations ── */
 
 @keyframes pulse-dot {
