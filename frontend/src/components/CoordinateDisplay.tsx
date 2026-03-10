@@ -1,69 +1,32 @@
-import { useState, useEffect } from 'react';
-import {
-  Viewer,
-  ScreenSpaceEventHandler,
-  ScreenSpaceEventType,
-  Cartographic,
-  Math as CesiumMath,
-  Cartesian2,
-} from 'cesium';
+import { memo } from 'react';
 
-interface CoordinateDisplayProps {
-  getViewer: () => Viewer | null;
+interface Props {
+  getViewer: () => any;
+  coords?: { lat: number; lng: number } | null;
+  connected?: boolean;
+  eqCount?: number;
+  wxCount?: number;
 }
 
-function CoordinateDisplay({ getViewer }: CoordinateDisplayProps) {
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-
-  useEffect(() => {
-    let handler: ScreenSpaceEventHandler | null = null;
-    let attempts = 0;
-
-    // Retry until viewer is available (it may initialize after mount)
-    const trySetup = () => {
-      const viewer = getViewer();
-      if (!viewer) {
-        attempts++;
-        if (attempts < 20) {
-          setTimeout(trySetup, 250);
-        }
-        return;
-      }
-
-      handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
-      handler.setInputAction((movement: { endPosition: Cartesian2 }) => {
-        const cartesian = viewer.camera.pickEllipsoid(
-          movement.endPosition,
-          viewer.scene.globe.ellipsoid,
-        );
-        if (cartesian) {
-          const cartographic = Cartographic.fromCartesian(cartesian);
-          setCoords({
-            lat: CesiumMath.toDegrees(cartographic.latitude),
-            lng: CesiumMath.toDegrees(cartographic.longitude),
-          });
-        } else {
-          setCoords(null);
-        }
-      }, ScreenSpaceEventType.MOUSE_MOVE);
-    };
-
-    trySetup();
-
-    return () => {
-      if (handler) {
-        handler.destroy();
-      }
-    };
-  }, [getViewer]);
-
+function CoordinateDisplay({ coords, connected, eqCount, wxCount }: Props) {
   return (
-    <div className="coordinate-display">
-      {coords
-        ? `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
-        : '---'}
+    <div style={{
+      position: 'absolute', bottom: 10, left: 10,
+      background: 'rgba(0,0,0,0.7)', color: '#fff',
+      padding: '8px 14px', borderRadius: 6, fontSize: 13,
+      fontFamily: 'monospace', zIndex: 1000,
+      display: 'flex', gap: 16, alignItems: 'center'
+    }}>
+      <span style={{ color: connected ? '#4ade80' : '#f87171' }}>
+        {connected ? '● LIVE' : '○ OFFLINE'}
+      </span>
+      {coords && (
+        <span>{coords.lat.toFixed(4)}°, {coords.lng.toFixed(4)}°</span>
+      )}
+      {(eqCount !== undefined) && <span>🔴 {eqCount} earthquakes</span>}
+      {(wxCount !== undefined) && <span>⚡ {wxCount} weather alerts</span>}
     </div>
   );
 }
 
-export default CoordinateDisplay;
+export default memo(CoordinateDisplay);
