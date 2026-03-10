@@ -5,18 +5,18 @@ import type { BBox } from 'geojson';
 import { useLayerData } from '../hooks/useLayerData';
 import { useLayerStore } from '../store/layerStore';
 import { useUiStore } from '../store/uiStore';
-import { useCluster, isCluster } from '../hooks/useCluster';
+import { useCluster, isCluster, zoomToCameraHeight } from '../hooks/useCluster';
 import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
 const LAYER_ID = 'speed_cameras';
-const CLUSTER_COLOR = Cesium.Color.fromCssColorString('#fbbf24');
+const CLUSTER_COLOR = Cesium.Color.fromCssColorString('#ffaa00');
 
 function clusterSize(count: number): number {
-  if (count >= 1000) return 28;
-  if (count >= 100) return 22;
-  if (count >= 10) return 16;
-  return 12;
+  if (count >= 1000) return 20;
+  if (count >= 100) return 16;
+  if (count >= 10) return 12;
+  return 10;
 }
 
 function SpeedCameraLayer() {
@@ -45,9 +45,9 @@ function SpeedCameraLayer() {
       }));
   }, [data]);
 
-  const { clusters, updateClusters } = useCluster(
+  const { clusters, updateClusters, getClusterExpansionZoom } = useCluster(
     pointFeatures as GeoJSON.Feature<GeoJSON.Point>[],
-    { radius: 60, maxZoom: 18 },
+    { radius: 100, maxZoom: 14 },
   );
 
   // Create collections + click handler
@@ -67,6 +67,20 @@ function SpeedCameraLayer() {
       const picked = viewer.scene.pick(event.position);
       if (Cesium.defined(picked) && picked.primitive instanceof Cesium.Billboard) {
         const id = picked.primitive.id as string;
+        // Cluster click → zoom in
+        if (typeof id === 'string' && id.startsWith('speed_cluster_')) {
+          const clusterId = parseInt(id.replace('speed_cluster_', ''), 10);
+          const expansionZoom = getClusterExpansionZoom(clusterId);
+          const height = zoomToCameraHeight(expansionZoom + 1);
+          const pos = picked.primitive.position;
+          if (pos) {
+            const carto = Cesium.Cartographic.fromCartesian(pos);
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromRadians(carto.longitude, carto.latitude, height),
+            });
+          }
+          return;
+        }
         const feature = featureMapRef.current.get(id);
         if (feature) selectFeature(feature);
       }
@@ -81,7 +95,7 @@ function SpeedCameraLayer() {
       labelCollectionRef.current = null;
       featureMapRef.current.clear();
     };
-  }, [viewer, selectFeature]);
+  }, [viewer, selectFeature, getClusterExpansionZoom]);
 
   // Camera move → update clusters
   const handleCameraMove = useCallback(() => {
@@ -127,11 +141,11 @@ function SpeedCameraLayer() {
         const count = feature.properties.point_count;
         const size = clusterSize(count);
         bc.add({ position, image: createCircleImage(size * 2, CLUSTER_COLOR), width: size * 2, height: size * 2, id: `speed_cluster_${feature.properties.cluster_id}` });
-        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '11px sans-serif', fillColor: Cesium.Color.BLACK, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: Number.POSITIVE_INFINITY });
+        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '11px sans-serif', fillColor: Cesium.Color.BLACK, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: 0 });
       } else {
         const props = feature.properties as LayerFeature['properties'];
         const id = (props?.id as string) ?? `speed_${lon}_${lat}`;
-        bc.add({ position, image: createSpeedCameraIcon(), width: 20, height: 20, id, disableDepthTestDistance: Number.POSITIVE_INFINITY });
+        bc.add({ position, image: createSpeedCameraIcon(), width: 20, height: 20, id, disableDepthTestDistance: 0 });
         const feat: LayerFeature = { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] };
         featureMapRef.current.set(id, feat);
         registerFeature(id, feat);
@@ -179,16 +193,32 @@ function createCircleImage(diameter: number, color: Cesium.Color): HTMLCanvasEle
 let speedCameraCanvas: HTMLCanvasElement | null = null;
 function createSpeedCameraIcon(): HTMLCanvasElement {
   if (speedCameraCanvas) return speedCameraCanvas;
+  const s = 24;
   const canvas = document.createElement('canvas');
-  canvas.width = 24; canvas.height = 24;
+  canvas.width = s; canvas.height = s;
   const ctx = canvas.getContext('2d')!;
-  ctx.beginPath(); ctx.arc(12, 12, 10, 0, Math.PI * 2);
-  ctx.fillStyle = '#f59e0b'; ctx.fill();
-  ctx.strokeStyle = '#92400e'; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.beginPath(); ctx.arc(12, 12, 5, 0, Math.PI * 2);
-  ctx.fillStyle = '#78350f'; ctx.fill();
-  ctx.beginPath(); ctx.arc(12, 12, 2, 0, Math.PI * 2);
-  ctx.fillStyle = '#fef3c7'; ctx.fill();
+  const cx = s / 2;
+  const cy = s / 2;
+
+  // Diamond shape - amber/warning color
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(Math.PI / 4);
+  ctx.beginPath();
+  ctx.rect(-5, -5, 10, 10);
+  ctx.fillStyle = 'rgba(255, 170, 0, 0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 170, 0, 0.9)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255, 170, 0, 0.95)';
+  ctx.fill();
+
   speedCameraCanvas = canvas;
   return canvas;
 }

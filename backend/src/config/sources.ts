@@ -24,8 +24,8 @@ export const sourceConfigs: SourceConfig[] = [
   {
     sourceId: 'flights',
     displayName: 'Live Flights',
-    interval: '*/30 * * * * *',
-    cacheTTL: 25,
+    interval: '0 */2 * * * *',
+    cacheTTL: 115,
     enabled: true,
   },
   {
@@ -54,6 +54,20 @@ export const sourceConfigs: SourceConfig[] = [
     displayName: 'Traffic Cameras (DOT)',
     interval: '0 */5 * * * *',
     cacheTTL: 300,
+    enabled: true,
+  },
+  {
+    sourceId: 'active_fires',
+    displayName: 'NASA FIRMS Active Fires',
+    interval: '0 */30 * * * *',
+    cacheTTL: 1800,
+    enabled: true,
+  },
+  {
+    sourceId: 'conflict_events',
+    displayName: 'GDELT Conflict Events',
+    interval: '0 */15 * * * *',
+    cacheTTL: 900,
     enabled: true,
   },
 ];

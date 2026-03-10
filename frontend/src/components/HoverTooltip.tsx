@@ -20,8 +20,9 @@ function getTooltipText(id: string): string | null {
     case 'flights': {
       const callsign = (props.callsign as string)?.trim();
       const alt = props.altitudeFt as number | undefined;
-      if (callsign && alt) return `${callsign} - ${Math.round(alt).toLocaleString()} ft`;
-      return callsign || String(props.label || id);
+      const mil = props.isMilitary ? '[MIL] ' : '';
+      if (callsign && alt) return `${mil}${callsign} - ${Math.round(alt).toLocaleString()} ft`;
+      return `${mil}${callsign || String(props.label || id)}`;
     }
     case 'satellites':
       return String(props.label || props.OBJECT_NAME || id);
@@ -41,6 +42,12 @@ function getTooltipText(id: string): string | null {
       return String(props.label || 'Traffic Camera');
     case 'weather':
       return String(props.label || props.event || 'Weather Alert');
+    case 'active_fires': {
+      const frp = props.frp as number | undefined;
+      return frp ? `Fire (${frp.toFixed(0)} MW)` : 'Active Fire';
+    }
+    case 'conflict_events':
+      return String(props.label || 'Conflict Event');
     default:
       return String(props.label || id);
   }
@@ -124,25 +131,8 @@ function HoverTooltip() {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        left: tooltip.x + 14,
-        top: tooltip.y - 30,
-        background: 'rgba(0, 0, 0, 0.9)',
-        color: '#e0e0e0',
-        padding: '4px 10px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        pointerEvents: 'none',
-        zIndex: 3000,
-        whiteSpace: 'nowrap',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
-        border: '1px solid #444',
-        maxWidth: '300px',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-      }}
+      className="hover-tooltip"
+      style={{ left: tooltip.x + 14, top: tooltip.y - 30 }}
     >
       {tooltip.text}
     </div>

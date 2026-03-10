@@ -30,8 +30,14 @@ function StatusBar() {
 
       {activeLayers.map((config) => {
         const state = layers[config.id];
+        const isError = state.status === 'error';
+        const abbrev = config.id === 'conflict_events' ? 'CON'
+          : config.id === 'active_fires' ? 'FIR'
+          : config.id === 'traffic_cameras' ? 'CAM'
+          : config.id === 'speed_cameras' ? 'SPD'
+          : config.id.slice(0, 3).toUpperCase();
         return (
-          <span key={config.id} className="status-bar__item">
+          <span key={config.id} className="status-bar__item" title={isError ? (state.error || 'Error') : config.displayName}>
             <span
               className="status-bar__live-dot"
               style={{
@@ -42,7 +48,7 @@ function StatusBar() {
                   : undefined,
               }}
             />
-            {config.id.slice(0, 3).toUpperCase()} {state.count}
+            {abbrev} {isError ? 'ERR' : state.count.toLocaleString()}
           </span>
         );
       })}

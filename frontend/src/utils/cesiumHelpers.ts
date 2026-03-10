@@ -15,14 +15,14 @@ export function magnitudeToSize(mag: number): number {
 export function severityToColor(severity: string): Color {
   switch (severity?.toLowerCase()) {
     case 'extreme':
-      return Color.RED.withAlpha(0.5);
+      return Color.RED.withAlpha(0.25);
     case 'severe':
-      return Color.ORANGE.withAlpha(0.5);
+      return Color.ORANGE.withAlpha(0.2);
     case 'moderate':
-      return Color.YELLOW.withAlpha(0.5);
+      return Color.YELLOW.withAlpha(0.15);
     case 'minor':
-      return Color.LIGHTBLUE.withAlpha(0.4);
+      return Color.LIGHTBLUE.withAlpha(0.12);
     default:
-      return Color.GRAY.withAlpha(0.3);
+      return Color.GRAY.withAlpha(0.1);
   }
 }

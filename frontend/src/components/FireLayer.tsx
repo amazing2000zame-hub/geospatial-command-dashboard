@@ -9,19 +9,24 @@ import { useCluster, isCluster, zoomToCameraHeight } from '../hooks/useCluster';
 import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
-const LAYER_ID = 'alpr';
-const CLUSTER_COLOR = Cesium.Color.fromCssColorString('#f472b6');
-const POINT_COLOR = Cesium.Color.fromCssColorString('#f472b6');
+const LAYER_ID = 'active_fires';
+const CLUSTER_COLOR = Cesium.Color.fromCssColorString('#ff6b35');
+
+function frpToColor(frp: number): Cesium.Color {
+  if (frp > 100) return Cesium.Color.fromCssColorString('#ff2a2a');
+  if (frp > 50) return Cesium.Color.fromCssColorString('#ff6b35');
+  if (frp > 20) return Cesium.Color.fromCssColorString('#ffaa00');
+  return Cesium.Color.fromCssColorString('#ff8844');
+}
 
 function clusterSize(count: number): number {
-  if (count >= 5000) return 22;
-  if (count >= 1000) return 18;
+  if (count >= 500) return 18;
   if (count >= 100) return 14;
   if (count >= 10) return 11;
   return 8;
 }
 
-function ALPRLayer() {
+function FireLayer() {
   const { viewer } = useCesium();
   const { data, loading, error } = useLayerData(LAYER_ID);
   const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
@@ -50,7 +55,7 @@ function ALPRLayer() {
 
   const { clusters, updateClusters, getClusterExpansionZoom } = useCluster(
     pointFeatures as GeoJSON.Feature<GeoJSON.Point>[],
-    { radius: 120, maxZoom: 14 },
+    { radius: 80, maxZoom: 12 },
   );
 
   // Create collections + click handler
@@ -73,11 +78,11 @@ function ALPRLayer() {
     handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
       const picked = viewer.scene.pick(event.position);
       if (!Cesium.defined(picked)) return;
-      // Cluster click (Billboard) → zoom in
+      // Cluster click → zoom in
       if (picked.primitive instanceof Cesium.Billboard) {
         const id = picked.primitive.id as string;
-        if (typeof id === 'string' && id.startsWith('alpr_cluster_')) {
-          const clusterId = parseInt(id.replace('alpr_cluster_', ''), 10);
+        if (typeof id === 'string' && id.startsWith('fire_cluster_')) {
+          const clusterId = parseInt(id.replace('fire_cluster_', ''), 10);
           const expansionZoom = getClusterExpansionZoom(clusterId);
           const height = zoomToCameraHeight(expansionZoom + 1);
           const pos = picked.primitive.position;
@@ -146,7 +151,7 @@ function ALPRLayer() {
 
     pc.removeAll(); bc.removeAll(); lc.removeAll();
     featureMapRef.current.clear();
-    clearLayerFeatures('alpr_');
+    clearLayerFeatures('fire_');
 
     for (const feature of clusters) {
       const [lon, lat] = feature.geometry.coordinates;
@@ -155,12 +160,13 @@ function ALPRLayer() {
       if (isCluster(feature)) {
         const count = feature.properties.point_count;
         const size = clusterSize(count);
-        bc.add({ position, image: createCircleImage(size * 2, CLUSTER_COLOR), width: size * 2, height: size * 2, id: `alpr_cluster_${feature.properties.cluster_id}` });
-        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '11px sans-serif', fillColor: Cesium.Color.WHITE, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: 0 });
+        bc.add({ position, image: createCircleImage(size * 2, CLUSTER_COLOR), width: size * 2, height: size * 2, id: `fire_cluster_${feature.properties.cluster_id}` });
+        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '10px sans-serif', fillColor: Cesium.Color.WHITE, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: 0 });
       } else {
         const props = feature.properties as LayerFeature['properties'];
-        const id = (props?.id as string) ?? `alpr_${lon}_${lat}`;
-        pc.add({ position, pixelSize: 5, color: POINT_COLOR, outlineColor: Cesium.Color.fromCssColorString('#be185d'), outlineWidth: 1, id, disableDepthTestDistance: 0 });
+        const id = (props?.id as string) ?? `fire_${lon}_${lat}`;
+        const frp = (props?.frp as number) || 0;
+        pc.add({ position, pixelSize: Math.max(3, Math.min(6, frp / 20 + 3)), color: frpToColor(frp), outlineColor: Cesium.Color.fromCssColorString('rgba(255, 100, 0, 0.3)'), outlineWidth: 1, id, disableDepthTestDistance: 0 });
         const feat: LayerFeature = { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] };
         featureMapRef.current.set(id, feat);
         registerFeature(id, feat);
@@ -206,4 +212,4 @@ function createCircleImage(diameter: number, color: Cesium.Color): HTMLCanvasEle
   return canvas;
 }
 
-export default ALPRLayer;
+export default FireLayer;

@@ -64,6 +64,23 @@ export class CacheService {
     };
   }
 
+  /**
+   * Store arbitrary JSON data under a raw key (no prefix).
+   * Used for non-GeoJSON intel panel data.
+   */
+  async setRaw(key: string, data: unknown, ttlSeconds: number): Promise<void> {
+    await this.client.setEx(key, ttlSeconds, JSON.stringify(data));
+  }
+
+  /**
+   * Retrieve arbitrary JSON data by raw key (no prefix).
+   */
+  async getRaw<T = unknown>(key: string): Promise<T | null> {
+    const raw = await this.client.get(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  }
+
   async disconnect(): Promise<void> {
     await this.client.disconnect();
     console.log('[cache] Disconnected from Redis');

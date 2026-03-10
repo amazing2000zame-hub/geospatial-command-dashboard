@@ -89,14 +89,27 @@ function WeatherLayer() {
 
     if (!data || !data.features || data.features.length === 0) return;
 
-    // Filter to features with valid, non-null geometry
-    const validFeatures = data.features.filter(
-      (f) =>
-        f.geometry !== null &&
-        f.geometry !== undefined &&
-        f.geometry.coordinates !== null &&
-        f.geometry.coordinates !== undefined,
-    );
+    // Filter to features with valid geometry within US bounds
+    // NWS data is US-only; polygons outside these bounds are malformed
+    // and cause rendering artifacts (red cross-hatch over Africa/Europe)
+    const validFeatures = data.features.filter((f) => {
+      if (!f.geometry || !f.geometry.coordinates) return false;
+      // For polygons, check that coordinates fall within reasonable US bounds
+      if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
+        try {
+          const coordStr = JSON.stringify(f.geometry.coordinates);
+          // Extract all numbers - quick bounds check on first ring
+          const nums = coordStr.match(/-?\d+\.?\d*/g)?.map(Number) || [];
+          for (let i = 0; i < nums.length; i += 2) {
+            const lon = nums[i];
+            const lat = nums[i + 1];
+            // Reject if any coordinate is outside extended US/territories bounds
+            if (lon < -180 || lon > 0 || lat < 10 || lat > 75) return false;
+          }
+        } catch { return false; }
+      }
+      return true;
+    });
 
     if (validFeatures.length === 0) return;
 

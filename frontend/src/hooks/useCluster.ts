@@ -42,6 +42,13 @@ export function cameraHeightToZoom(height: number): number {
 }
 
 /**
+ * Convert zoom level back to approximate camera height (meters).
+ */
+export function zoomToCameraHeight(zoom: number): number {
+  return 1000 * Math.pow(2, 15.5 - zoom);
+}
+
+/**
  * Reusable clustering hook for large point datasets.
  *
  * @param features - Array of GeoJSON Point features to cluster
@@ -107,5 +114,21 @@ export function useCluster(
     [],
   );
 
-  return { clusters, updateClusters };
+  /**
+   * Get the zoom level at which a cluster expands.
+   */
+  const getClusterExpansionZoom = useCallback(
+    (clusterId: number): number => {
+      const index = indexRef.current;
+      if (!index) return 10;
+      try {
+        return index.getClusterExpansionZoom(clusterId);
+      } catch {
+        return 10;
+      }
+    },
+    [],
+  );
+
+  return { clusters, updateClusters, getClusterExpansionZoom };
 }

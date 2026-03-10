@@ -22,8 +22,12 @@ interface OverpassResponse {
 const PRIMARY_URL = 'https://overpass-api.de/api/interpreter';
 const MIRROR_URL = 'https://lz4.overpass-api.de/api/interpreter';
 
+// Query US + Europe speed cameras with bbox to avoid timeout on global query
 const OVERPASS_QUERY =
-  '[out:json][timeout:120];node["highway"="speed_camera"];out body;';
+  '[out:json][timeout:180];(' +
+  'node["highway"="speed_camera"](24.0,-125.0,50.0,-66.0);' + // US
+  'node["highway"="speed_camera"](35.0,-11.0,72.0,45.0);' +   // Europe
+  ');out body;';
 
 export class OverpassSpeedCameraFetcher extends BaseFetcher {
   readonly sourceId = 'speed_cameras';

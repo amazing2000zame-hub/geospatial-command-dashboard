@@ -7,6 +7,8 @@ import ALPRLayer from './components/ALPRLayer';
 import SpeedCameraLayer from './components/SpeedCameraLayer';
 import SatelliteLayer from './components/SatelliteLayer';
 import TrafficCameraLayer from './components/TrafficCameraLayer';
+import FireLayer from './components/FireLayer';
+import ConflictLayer from './components/ConflictLayer';
 import HoverTooltip from './components/HoverTooltip';
 import SearchBarBridge from './components/SearchBarBridge';
 import ZoomControls from './components/ZoomControls';
@@ -15,6 +17,8 @@ import StatusBar from './components/StatusBar';
 import DetailPopup from './components/DetailPopup';
 import HudOverlay from './components/HudOverlay';
 import ModeSelector from './components/ModeSelector';
+import StreetView from './components/StreetView';
+import IntelPanel from './components/IntelPanel';
 import { useUiStore } from './store/uiStore';
 import './App.css';
 
@@ -31,7 +35,14 @@ function App() {
       {/* Military HUD overlays */}
       <HudOverlay />
 
-      <Globe>
+      <Globe
+        overlays={
+          <>
+            <SearchBarBridge />
+            <ZoomControls />
+          </>
+        }
+      >
         {/* Data layers */}
         <EarthquakeLayer />
         <WeatherLayer />
@@ -40,12 +51,11 @@ function App() {
         <SpeedCameraLayer />
         <SatelliteLayer />
         <TrafficCameraLayer />
+        <FireLayer />
+        <ConflictLayer />
 
         {/* Hover tooltip for all layers */}
         <HoverTooltip />
-
-        <SearchBarBridge />
-        <ZoomControls />
       </Globe>
 
       {/* UI overlays */}
@@ -53,6 +63,8 @@ function App() {
       <StatusBar />
       <ModeSelector />
       <DetailPopup feature={selectedFeature} onClose={handleClosePopup} />
+      <StreetView />
+      <IntelPanel />
     </>
   );
 }

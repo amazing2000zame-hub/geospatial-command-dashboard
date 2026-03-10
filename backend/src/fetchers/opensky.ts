@@ -34,6 +34,43 @@ const IDX = {
 const MS_TO_KNOTS = 1.94384;
 const METERS_TO_FEET = 3.28084;
 
+/** Known military callsign prefixes. */
+const MILITARY_CALLSIGN_PREFIXES = [
+  'RCH', 'REACH', 'EVAC', 'DUKE', 'FORTE', 'JAKE', 'TOPCAT',
+  'NCHO', 'SPAR', 'SAM', 'EXEC', 'VENUS', 'ORDER', 'DEATH',
+  'DOOM', 'SKULL', 'HAVOC', 'VIPER', 'BOLT', 'HAWK', 'EAGLE',
+  'IRON', 'STEEL', 'COBRA', 'LANCER', 'REAPER', 'HOUND', 'WOLF',
+  'GHOST', 'ATLAS', 'GIANT', 'KING', 'ISTRY', 'TABOR', 'THUD',
+  'CNV', 'RRR', 'NAF', 'CFC', 'IAM', 'MMF', 'PAT', 'GAF',
+  'BAF', 'FAF', 'SWF', 'HKF', 'ASTRA', 'RAVEN', 'TALON',
+  'ROCKY', 'NITE', 'DARK', 'RAGE', 'FURY', 'STORM', 'BONE',
+  'HEAVY', 'CASA', 'MAC', 'AMC', 'JADE', 'PEARL', 'RUBY',
+  'TROJAN', 'VIGOR', 'BLADE', 'SWIFT', 'LANCE',
+];
+
+/** Military ICAO24 hex block starts (US military ranges). */
+const MILITARY_ICAO_RANGES: [number, number][] = [
+  [0xADF7C8, 0xAFFFFF],  // US military
+  [0x3F0000, 0x3FFFFF],  // France military
+  [0x43C000, 0x43CFFF],  // UK military
+  [0x3EA000, 0x3EBFFF],  // Germany military
+  [0x710000, 0x71FFFF],  // Australia military
+];
+
+function isMilitaryFlight(callsign: string, icao24: string): boolean {
+  const cs = callsign.toUpperCase();
+  for (const prefix of MILITARY_CALLSIGN_PREFIXES) {
+    if (cs.startsWith(prefix)) return true;
+  }
+  const hex = parseInt(icao24, 16);
+  if (!isNaN(hex)) {
+    for (const [start, end] of MILITARY_ICAO_RANGES) {
+      if (hex >= start && hex <= end) return true;
+    }
+  }
+  return false;
+}
+
 const OPENSKY_API_URL = 'https://opensky-network.org/api/states/all';
 
 type StateVector = (string | number | boolean | number[] | null)[];
@@ -46,8 +83,8 @@ interface OpenSkyResponse {
 export class OpenSkyFetcher extends BaseFetcher {
   readonly sourceId = 'flights';
   readonly displayName = 'Live Flights';
-  readonly defaultInterval = '*/30 * * * * *'; // every 30 seconds
-  readonly cacheTTL = 25; // slightly less than interval
+  readonly defaultInterval = '0 */2 * * * *'; // every 2 minutes (avoid rate limits)
+  readonly cacheTTL = 115; // slightly less than interval
 
   private auth: OpenSkyAuth;
 
@@ -151,6 +188,7 @@ export class OpenSkyFetcher extends BaseFetcher {
 
       // Label: prefer callsign, fall back to icao24 uppercase
       const label = callsign || icao24.toUpperCase();
+      const military = isMilitaryFlight(callsign, icao24);
 
       // Severity: map altitude bands to a 0-1 value for UI theming
       //   ground=0, low(<10kft)=0.25, mid(10-30k)=0.5, cruise(>30k)=1.0
@@ -185,6 +223,7 @@ export class OpenSkyFetcher extends BaseFetcher {
           onGround,
           squawk,
           aircraftCategory: category,
+          isMilitary: military,
         },
       });
     }

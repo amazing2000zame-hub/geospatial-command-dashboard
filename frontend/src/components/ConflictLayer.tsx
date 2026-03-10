@@ -7,16 +7,15 @@ import { useUiStore } from '../store/uiStore';
 import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
-const LAYER_ID = 'traffic_cameras';
-const ICON_SIZE = 32;
+const LAYER_ID = 'conflict_events';
 
 const iconCache = new Map<string, HTMLCanvasElement>();
 
-function createCameraIcon(): HTMLCanvasElement {
-  const key = 'traffic_camera_icon';
+function createConflictIcon(isMilitary: boolean, severity: number): HTMLCanvasElement {
+  const key = `conflict_${isMilitary}_${severity.toFixed(1)}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
 
-  const s = ICON_SIZE;
+  const s = 36;
   const canvas = document.createElement('canvas');
   canvas.width = s;
   canvas.height = s;
@@ -24,40 +23,82 @@ function createCameraIcon(): HTMLCanvasElement {
   const cx = s / 2;
   const cy = s / 2;
 
-  // Outer ring - thin cyan outline
-  ctx.beginPath();
-  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(0, 200, 210, 0.9)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  if (isMilitary) {
+    // Military: red diamond with crosshair — larger, bolder
+    const color = severity >= 0.75 ? '#ff2a2a' : severity >= 0.5 ? '#ff6b35' : '#ef4444';
 
-  // Inner fill - subtle glow
-  ctx.beginPath();
-  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 200, 210, 0.12)';
-  ctx.fill();
+    // Outer glow
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.PI / 4);
+    ctx.beginPath();
+    ctx.rect(-11, -11, 22, 22);
+    ctx.fillStyle = `${color}15`;
+    ctx.fill();
+    ctx.restore();
 
-  // Crosshair lines
-  ctx.strokeStyle = 'rgba(0, 200, 210, 0.6)';
-  ctx.lineWidth = 1;
-  // Horizontal
-  ctx.beginPath(); ctx.moveTo(cx - 6, cy); ctx.lineTo(cx - 3, cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 3, cy); ctx.lineTo(cx + 6, cy); ctx.stroke();
-  // Vertical
-  ctx.beginPath(); ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy - 3); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx, cy + 6); ctx.stroke();
+    // Diamond
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.PI / 4);
+    ctx.beginPath();
+    ctx.rect(-8, -8, 16, 16);
+    ctx.fillStyle = `${color}33`;
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
 
-  // Center dot
-  ctx.beginPath();
-  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 200, 210, 0.95)';
-  ctx.fill();
+    // Inner crosshair
+    ctx.strokeStyle = `${color}aa`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy + 6); ctx.stroke();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  } else {
+    // Civilian conflict: orange/red triangle — larger
+    const color = severity >= 0.75 ? '#ff6b35' : '#ffaa00';
+
+    // Outer glow
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 12);
+    ctx.lineTo(cx + 12, cy + 9);
+    ctx.lineTo(cx - 12, cy + 9);
+    ctx.closePath();
+    ctx.fillStyle = `${color}15`;
+    ctx.fill();
+
+    // Triangle
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 10);
+    ctx.lineTo(cx + 10, cy + 7);
+    ctx.lineTo(cx - 10, cy + 7);
+    ctx.closePath();
+    ctx.fillStyle = `${color}33`;
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Exclamation mark
+    ctx.fillStyle = color;
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('!', cx, cy + 1);
+  }
 
   iconCache.set(key, canvas);
   return canvas;
 }
 
-function TrafficCameraLayer() {
+function ConflictLayer() {
   const { viewer } = useCesium();
   const { data, loading, error } = useLayerData(LAYER_ID);
   const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
@@ -69,7 +110,6 @@ function TrafficCameraLayer() {
   const featureMapRef = useRef<Map<string, LayerFeature>>(new Map());
   const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
 
-  // Create BillboardCollection + click handler
   useEffect(() => {
     if (!viewer) return;
 
@@ -89,41 +129,36 @@ function TrafficCameraLayer() {
     handlerRef.current = handler;
 
     return () => {
-      if (handlerRef.current) {
-        handlerRef.current.destroy();
-        handlerRef.current = null;
-      }
-      if (collectionRef.current && !viewer.isDestroyed()) {
-        viewer.scene.primitives.remove(collectionRef.current);
-      }
+      if (handlerRef.current) { handlerRef.current.destroy(); handlerRef.current = null; }
+      if (collectionRef.current && !viewer.isDestroyed()) viewer.scene.primitives.remove(collectionRef.current);
       collectionRef.current = null;
       featureMapRef.current.clear();
     };
   }, [viewer, selectFeature]);
 
-  // Update billboards when data changes
   useEffect(() => {
     const collection = collectionRef.current;
     if (!collection || !viewer) return;
 
     collection.removeAll();
     featureMapRef.current.clear();
-    clearLayerFeatures('traffic_cam_');
+    clearLayerFeatures('conflict_');
 
     if (data?.features) {
-      const icon = createCameraIcon();
-
       for (const feature of data.features) {
-        if (!feature.geometry || feature.geometry.type !== 'Point' || !Array.isArray(feature.geometry.coordinates)) continue;
-
+        if (!feature.geometry || feature.geometry.type !== 'Point') continue;
         const [lon, lat] = feature.geometry.coordinates as number[];
         const id = feature.properties.id as string;
+        const isMilitary = (feature.properties.isMilitary as boolean) || false;
+        const severity = Number(feature.properties.severity) || 0;
+
+        const icon = createConflictIcon(isMilitary, severity);
 
         collection.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat),
           image: icon,
-          width: ICON_SIZE,
-          height: ICON_SIZE,
+          width: 36,
+          height: 36,
           id,
         });
 
@@ -138,22 +173,17 @@ function TrafficCameraLayer() {
     if (!viewer.isDestroyed()) viewer.scene.requestRender();
   }, [viewer, data, setLayerStatus, setLayerUpdated]);
 
-  // Sync loading/error status
   useEffect(() => {
     if (loading) setLayerStatus(LAYER_ID, 'loading', 0);
     if (error) setLayerStatus(LAYER_ID, 'error', 0, error);
   }, [loading, error, setLayerStatus]);
 
-  // Toggle visibility
   useEffect(() => {
-    const collection = collectionRef.current;
-    if (collection) {
-      collection.show = visible;
-      if (viewer && !viewer.isDestroyed()) viewer.scene.requestRender();
-    }
+    if (collectionRef.current) collectionRef.current.show = visible;
+    if (viewer && !viewer.isDestroyed()) viewer.scene.requestRender();
   }, [viewer, visible]);
 
   return null;
 }
 
-export default TrafficCameraLayer;
+export default ConflictLayer;

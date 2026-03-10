@@ -10,11 +10,13 @@ import type { LayerFeature } from '../types/geojson';
 const LAYER_ID = 'flights';
 
 function altitudeToColor(altitudeFt: number, onGround: boolean): Cesium.Color {
-  if (onGround) return Cesium.Color.GRAY;
-  if (altitudeFt < 10_000) return Cesium.Color.LIME;
-  if (altitudeFt < 30_000) return Cesium.Color.CYAN;
-  return Cesium.Color.WHITE;
+  if (onGround) return Cesium.Color.fromCssColorString('#6a7580');
+  if (altitudeFt < 10_000) return Cesium.Color.fromCssColorString('#34d399');
+  if (altitudeFt < 30_000) return Cesium.Color.fromCssColorString('#a78bfa');
+  return Cesium.Color.fromCssColorString('#c8d0d8');
 }
+
+const MILITARY_COLOR = Cesium.Color.fromCssColorString('#ff2a2a');
 
 function FlightLayer() {
   const { viewer } = useCesium();
@@ -79,13 +81,15 @@ function FlightLayer() {
         const onGround = (feature.properties.onGround as boolean) || false;
         const trueTrack = (feature.properties.trueTrack as number | null) ?? 0;
         const rotationRad = -Cesium.Math.toRadians(trueTrack);
-        const color = altitudeToColor(altitudeFt, onGround);
+        const isMilitary = (feature.properties.isMilitary as boolean) || false;
+        const color = isMilitary ? MILITARY_COLOR : altitudeToColor(altitudeFt, onGround);
+        const size = isMilitary ? 24 : 20;
 
         collection.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat),
           image: '/icons/aircraft.svg',
-          width: 24,
-          height: 24,
+          width: size,
+          height: size,
           rotation: rotationRad,
           alignedAxis: Cesium.Cartesian3.UNIT_Z,
           color,

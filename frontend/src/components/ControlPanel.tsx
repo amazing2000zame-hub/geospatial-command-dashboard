@@ -4,9 +4,10 @@ const GROUP_LABELS: Record<string, string> = {
   live: 'LIVE DATA',
   surveillance: 'SURVEILLANCE',
   space: 'SPACE',
+  conflict: 'CONFLICT / MILITARY',
 };
 
-const GROUP_ORDER = ['live', 'surveillance', 'space'];
+const GROUP_ORDER = ['live', 'surveillance', 'space', 'conflict'];
 
 function groupedConfigs(): Record<string, LayerConfig[]> {
   const groups: Record<string, LayerConfig[]> = {};
@@ -52,6 +53,10 @@ function ControlPanel() {
                   style={{ opacity: isEnabled ? 1 : 0.4 }}
                 >
                   <div className="layer-toggle__info">
+                    <span
+                      className="layer-toggle__swatch"
+                      style={{ backgroundColor: config.color }}
+                    />
                     <span className={`layer-toggle__dot ${statusClass}`} />
                     <span className={`layer-toggle__name ${isVisible ? 'layer-toggle__name--active' : ''}`}>
                       {config.displayName}

@@ -169,7 +169,7 @@ function SatelliteLayer() {
           horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
           verticalOrigin: Cesium.VerticalOrigin.CENTER,
           heightReference: Cesium.HeightReference.NONE,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          disableDepthTestDistance: 0,
         });
 
         satellitesRef.current.set(id, { satrec, feature, billboard });

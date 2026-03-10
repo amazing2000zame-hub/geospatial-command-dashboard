@@ -51,6 +51,10 @@ function layerBorderColor(layer: string): string {
       return '#34d399';
     case 'traffic_cameras':
       return '#22c55e';
+    case 'active_fires':
+      return '#ff6b35';
+    case 'conflict_events':
+      return '#ef4444';
     default:
       return '#888';
   }
@@ -173,10 +177,16 @@ function FlightDetail({ feature }: { feature: LayerFeature }) {
   const onGround = props.onGround as boolean | undefined;
   const squawk = props.squawk as string | undefined;
   const heading = props.trueTrack as number | undefined;
+  const isMilitary = props.isMilitary as boolean | undefined;
 
   return (
     <>
       <h3 className="detail-popup__title">{callsign}</h3>
+      {isMilitary && (
+        <span className="detail-popup__badge" style={{ backgroundColor: '#ef4444' }}>
+          MILITARY
+        </span>
+      )}
       {icao24 && (
         <div className="detail-popup__row">
           <span className="detail-popup__label">ICAO24</span>
@@ -431,8 +441,6 @@ function TrafficCameraDetail({ feature }: { feature: LayerFeature }) {
   const route = props.route as string | undefined;
   const direction = props.direction as string | undefined;
   const pageUrl = props.pageUrl as string | undefined;
-  const [showStream, setShowStream] = useState(false);
-
   return (
     <>
       <h3 className="detail-popup__title">{name}</h3>
@@ -440,23 +448,15 @@ function TrafficCameraDetail({ feature }: { feature: LayerFeature }) {
         LIVE FEED
       </span>
 
-      {/* HLS video stream */}
-      {showStream && streamUrl && (
+      {/* HLS video stream - auto-play when available */}
+      {streamUrl && (
         <div className="detail-popup__camera-feed">
           <HlsPlayer url={streamUrl} />
         </div>
       )}
-      {!showStream && streamUrl && (
-        <button
-          className="detail-popup__stream-btn"
-          onClick={() => setShowStream(true)}
-        >
-          Watch Live Feed
-        </button>
-      )}
       {!streamUrl && (
         <div className="detail-popup__camera-error">
-          No live stream available
+          No live stream available for this camera
         </div>
       )}
 
@@ -484,6 +484,149 @@ function TrafficCameraDetail({ feature }: { feature: LayerFeature }) {
           rel="noopener noreferrer"
         >
           View on 511NY
+        </a>
+      )}
+    </>
+  );
+}
+
+function FireDetail({ feature }: { feature: LayerFeature }) {
+  const props = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const brightness = props.brightness as number | undefined;
+  const frp = props.frp as number | undefined;
+  const confidence = props.confidence as number | undefined;
+  const acqDate = props.acqDate as string | undefined;
+  const acqTime = props.acqTime as string | undefined;
+  const satellite = props.satellite as string | undefined;
+  const daynight = props.daynight as string | undefined;
+
+  return (
+    <>
+      <h3 className="detail-popup__title">Active Fire / Hotspot</h3>
+      <span className="detail-popup__badge" style={{ backgroundColor: '#ff6b35' }}>
+        {(frp ?? 0) > 50 ? 'HIGH INTENSITY' : 'DETECTED'}
+      </span>
+      {brightness !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Brightness</span>
+          <span>{brightness.toFixed(1)} K</span>
+        </div>
+      )}
+      {frp !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">FRP</span>
+          <span>{frp.toFixed(1)} MW</span>
+        </div>
+      )}
+      {confidence !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Confidence</span>
+          <span>{confidence}%</span>
+        </div>
+      )}
+      {acqDate && acqTime && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Acquired</span>
+          <span>{acqDate} {acqTime}Z</span>
+        </div>
+      )}
+      {satellite && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Satellite</span>
+          <span>{satellite === 'T' ? 'Terra' : satellite === 'A' ? 'Aqua' : satellite}</span>
+        </div>
+      )}
+      {daynight && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Time of Day</span>
+          <span>{daynight === 'D' ? 'Daytime' : 'Nighttime'}</span>
+        </div>
+      )}
+      <div className="detail-popup__row">
+        <span className="detail-popup__label">Position</span>
+        <span>{formatCoords(coords)}</span>
+      </div>
+    </>
+  );
+}
+
+function ConflictDetail({ feature }: { feature: LayerFeature }) {
+  const props = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const eventType = props.eventType as string | undefined;
+  const actor1 = props.actor1 as string | undefined;
+  const actor2 = props.actor2 as string | undefined;
+  const goldstein = props.goldstein as number | undefined;
+  const geoName = props.geoName as string | undefined;
+  const isMilitary = props.isMilitary as boolean | undefined;
+  const numArticles = props.numArticles as number | undefined;
+  const sourceUrl = props.sourceUrl as string | undefined;
+  const eventDate = props.eventDate as string | undefined;
+
+  const formattedDate = eventDate
+    ? `${eventDate.slice(0, 4)}-${eventDate.slice(4, 6)}-${eventDate.slice(6, 8)}`
+    : undefined;
+
+  return (
+    <>
+      <h3 className="detail-popup__title">{eventType || 'Conflict Event'}</h3>
+      <span
+        className="detail-popup__badge"
+        style={{ backgroundColor: isMilitary ? '#ef4444' : '#ff6b35' }}
+      >
+        {isMilitary ? 'MILITARY' : 'CONFLICT'}
+      </span>
+      {actor1 && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Actor 1</span>
+          <span>{actor1}</span>
+        </div>
+      )}
+      {actor2 && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Actor 2</span>
+          <span>{actor2}</span>
+        </div>
+      )}
+      {geoName && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Location</span>
+          <span>{geoName}</span>
+        </div>
+      )}
+      {goldstein !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Goldstein</span>
+          <span style={{ color: goldstein < -5 ? '#ff2a2a' : goldstein < 0 ? '#ffaa00' : '#34d399' }}>
+            {goldstein.toFixed(1)}
+          </span>
+        </div>
+      )}
+      {formattedDate && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Date</span>
+          <span>{formattedDate}</span>
+        </div>
+      )}
+      {numArticles !== undefined && numArticles > 0 && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Sources</span>
+          <span>{numArticles} articles</span>
+        </div>
+      )}
+      <div className="detail-popup__row">
+        <span className="detail-popup__label">Position</span>
+        <span>{formatCoords(coords)}</span>
+      </div>
+      {sourceUrl && (
+        <a
+          className="detail-popup__link"
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View Source
         </a>
       )}
     </>
@@ -518,7 +661,8 @@ function DetailPopup({ feature, onClose }: DetailPopupProps) {
   if (!feature) return null;
 
   const layer = feature.properties.layer;
-  const borderColor = layerBorderColor(layer);
+  const isMilFlight = layer === 'flights' && feature.properties.isMilitary;
+  const borderColor = isMilFlight ? '#ef4444' : layerBorderColor(layer);
 
   let content;
   switch (layer) {
@@ -542,6 +686,12 @@ function DetailPopup({ feature, onClose }: DetailPopupProps) {
       break;
     case 'traffic_cameras':
       content = <TrafficCameraDetail feature={feature} />;
+      break;
+    case 'active_fires':
+      content = <FireDetail feature={feature} />;
+      break;
+    case 'conflict_events':
+      content = <ConflictDetail feature={feature} />;
       break;
     default:
       content = <GenericDetail feature={feature} />;

@@ -10,6 +10,11 @@ import { OverpassSpeedCameraFetcher } from './fetchers/overpass.js';
 import { DeflockALPRFetcher } from './fetchers/deflock.js';
 import { CelesTrakFetcher } from './fetchers/celestrak.js';
 import { TrafficCamFetcher } from './fetchers/trafficcam.js';
+import { FIRMSFetcher } from './fetchers/firms.js';
+import { GDELTConflictFetcher } from './fetchers/gdelt.js';
+import { NewsRssFetcher } from './fetchers/news-rss.js';
+import { EconomyFetcher } from './fetchers/economy.js';
+import { SituationsFetcher } from './fetchers/situations.js';
 import type { ScheduledTask } from 'node-cron';
 
 const config = loadEnv();
@@ -31,10 +36,23 @@ const fetchers = [
   new DeflockALPRFetcher(cache, layerNs),
   new CelesTrakFetcher(cache, layerNs),
   new TrafficCamFetcher(cache, layerNs),
+  new FIRMSFetcher(cache, layerNs),
+  new GDELTConflictFetcher(cache, layerNs),
 ];
 
 // Start scheduler with staggered initial fetches
 const cronJobs: ScheduledTask[] = startScheduler(fetchers, sourceConfigs);
+
+// --- Intel Panel fetchers (interval-based, not cron) ---
+const newsRss = new NewsRssFetcher(cache, layerNs);
+const economy = new EconomyFetcher(cache, layerNs);
+const situations = new SituationsFetcher(cache, layerNs);
+
+newsRss.start(10 * 60 * 1000);     // every 10 minutes
+economy.start(15 * 60 * 1000);     // every 15 minutes
+situations.start(15 * 60 * 1000);  // every 15 minutes
+
+console.log('[startup] Intel panel fetchers started (news, economy, situations)');
 
 console.log(
   `[startup] Geospatial Dashboard backend running on port ${config.PORT}`,
@@ -49,6 +67,12 @@ async function shutdown(signal: string): Promise<void> {
     job.stop();
   }
   console.log('[shutdown] Cron jobs stopped');
+
+  // Stop intel panel fetchers
+  newsRss.stop();
+  economy.stop();
+  situations.stop();
+  console.log('[shutdown] Intel fetchers stopped');
 
   // Disconnect Redis
   try {

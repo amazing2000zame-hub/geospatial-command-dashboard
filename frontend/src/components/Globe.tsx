@@ -23,7 +23,10 @@ export function useGlobe() {
 }
 
 interface GlobeProps {
+  /** Children rendered INSIDE the CesiumJS Viewer (layers, tooltips) */
   children?: ReactNode;
+  /** Children rendered OUTSIDE the Viewer but inside GlobeContext (UI overlays) */
+  overlays?: ReactNode;
 }
 
 // ESRI World Imagery - free satellite imagery, no API key required
@@ -49,7 +52,7 @@ function createOsmProvider() {
   });
 }
 
-function Globe({ children }: GlobeProps) {
+function Globe({ children, overlays }: GlobeProps) {
   const viewerRef = useRef<{ cesiumElement: Viewer | null }>(null);
   const handlerRef = useRef<ScreenSpaceEventHandler | null>(null);
   const setCoords = useUiStore((s) => s.setCoords);
@@ -67,8 +70,16 @@ function Globe({ children }: GlobeProps) {
 
       // Scene settings
       viewer.scene.globe.enableLighting = true;
+      viewer.scene.globe.depthTestAgainstTerrain = false;
       viewer.scene.fog.enabled = true;
       if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = true;
+
+      // Disable CesiumJS default entity selection behavior —
+      // prevents clicking entities from opening info boxes or new tabs
+      viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+      viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+      viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+      viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
       // Start with satellite imagery by default
       viewer.imageryLayers.removeAll();
@@ -158,6 +169,8 @@ function Globe({ children }: GlobeProps) {
       >
         {children}
       </ResiumViewer>
+      {/* Overlays rendered outside CesiumJS container but inside GlobeContext */}
+      {overlays}
     </GlobeContext.Provider>
   );
 }
