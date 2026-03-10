@@ -1,29 +1,31 @@
 services:
   redis:
-    image: redis:7-alpine
+    image: redis:7.2-alpine
     container_name: geospatial-redis
     restart: unless-stopped
-    networks:
-      - geospatial
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
+    networks:
+      - geospatial
 
   backend:
-    image: node:20-slim
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: geospatial-backend
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./backend:/app
-    command: node dist/index.js
     environment:
       - NODE_ENV=production
-      - PORT=4000
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - PORT=4010
+      - REDIS_URL=redis://redis:6379
     depends_on:
       redis:
         condition: service_healthy
@@ -31,17 +33,15 @@ services:
       - geospatial
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+      args:
+        VITE_CESIUM_ION_TOKEN: ${CESIUM_ION_TOKEN}
     container_name: geospatial-nginx
     restart: unless-stopped
     ports:
       - "3010:80"
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html:ro
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
     depends_on:
       - backend
     networks:

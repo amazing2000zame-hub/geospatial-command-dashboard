@@ -1,26 +1,31 @@
-
-build/
-# Build outputs
-data/
 # Dependencies
+node_modules/
+
+# Build outputs
 dist/
-# Docker
-.dockerignore
-.DS_Store
-.env
+build/
+
 # Environment
+.env
 .env.local
 .env.production
-.idea/
-# IDEs
+
+# Logs
 *.log
 logs/
-# Logs
-node_modules/
 npm-debug.log*
+
 # OS
-package-lock.json
-*.swo
-*.swp
+.DS_Store
 Thumbs.db
+
+# IDEs
+.idea/
 .vscode/
+
+# Editor swap files
+*.swp
+*.swo
+
+# Data
+data/

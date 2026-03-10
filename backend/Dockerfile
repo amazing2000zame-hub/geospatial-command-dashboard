@@ -1,15 +1,14 @@
-FROM node:20-slim AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install --ignore-scripts
-RUN node node_modules/esbuild/install.js 2>/dev/null || true
+RUN npm ci
 COPY . .
-RUN npx tsc
+RUN npm run build
 
-FROM node:20-slim
+FROM node:22-alpine
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install --omit=dev --ignore-scripts
+RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
-EXPOSE 4000
+EXPOSE 4010
 CMD ["node", "dist/index.js"]
