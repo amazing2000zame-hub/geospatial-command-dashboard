@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-10 -- Completed 01-01-PLAN.md (project scaffolding, Docker, CesiumJS globe)
+Last activity: 2026-03-10 -- Completed 01-02-PLAN.md (Fastify backend, Redis cache, USGS/NWS fetchers)
 
-Progress: [=░░░░░░░░░] 8%
+Progress: [==░░░░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 86 min
-- Total execution time: 1.4 hours
+- Total plans completed: 2
+- Average duration: 46 min
+- Total execution time: 1.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 1 | 86 min | 86 min |
+| 01-foundation | 2 | 91 min | 46 min |
 
 **Recent Trend:**
-- Last 5 plans: 86min
-- Trend: baseline
+- Last 5 plans: 86min, 5min
+- Trend: accelerating
 
 *Updated after each plan completion*
 
@@ -52,6 +52,10 @@ Recent decisions affecting current work:
 - [01-01]: security_opt seccomp/apparmor unconfined for nginx on Proxmox
 - [01-01]: getViewer callback pattern for sharing CesiumJS viewer ref with child components
 - [01-01]: useEffect retry polling for viewer configuration (Resium onReady not in types)
+- [01-02]: Socket.IO attached AFTER Fastify listen (requires http.Server to be active)
+- [01-02]: Cache TTL slightly less than poll interval (55s/60s) ensures fresh data on next cycle
+- [01-02]: Random 0-5s jitter on initial fetch prevents thundering herd on restart
+- [01-02]: Updated severity type from string to number|null for normalized 0-1 scale
 
 ### Pending Todos
 
@@ -66,5 +70,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 01-01-PLAN.md
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

@@ -35,7 +35,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Earthquake Data
 
-- [ ] **EQKE-01**: User sees global earthquake events updated every 60 seconds
+- [x] **EQKE-01**: User sees global earthquake events updated every 60 seconds
 - [ ] **EQKE-02**: Earthquake markers sized by magnitude with color gradient
 - [ ] **EQKE-03**: User clicks earthquake to see popup: magnitude, depth, location, time
 
@@ -85,7 +85,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Weather Alerts
 
-- [ ] **WTHR-01**: User sees active NWS weather alerts as polygon overlays
+- [x] **WTHR-01**: User sees active NWS weather alerts as polygon overlays
 - [ ] **WTHR-02**: Alerts colored by severity (watch, warning, advisory)
 - [ ] **WTHR-03**: User clicks alert polygon to see details and affected area
 
@@ -115,19 +115,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Backend & Infrastructure
 
-- [ ] **BACK-01**: Node.js backend polls 17 external APIs on configurable schedules
-- [ ] **BACK-02**: All API responses normalized to unified GeoJSON FeatureCollections
-- [ ] **BACK-03**: Redis caches API responses with per-source TTL matching rate limits
-- [ ] **BACK-04**: WebSocket server pushes real-time updates to all connected browsers
-- [ ] **BACK-05**: Backend serves REST endpoints for initial data load per layer
-- [ ] **BACK-06**: Each data source is isolated in its own fetcher file (one per source)
-- [ ] **BACK-07**: Config file defines all API endpoints, keys, poll intervals
+- [x] **BACK-01**: Node.js backend polls 17 external APIs on configurable schedules
+- [x] **BACK-02**: All API responses normalized to unified GeoJSON FeatureCollections
+- [x] **BACK-03**: Redis caches API responses with per-source TTL matching rate limits
+- [x] **BACK-04**: WebSocket server pushes real-time updates to all connected browsers
+- [x] **BACK-05**: Backend serves REST endpoints for initial data load per layer
+- [x] **BACK-06**: Each data source is isolated in its own fetcher file (one per source)
+- [x] **BACK-07**: Config file defines all API endpoints, keys, poll intervals
 
 ### Deployment
 
 - [x] **DEPL-01**: Entire stack deploys via single `docker compose up` command
 - [x] **DEPL-02**: Frontend served by nginx container on port 3010
-- [ ] **DEPL-03**: Backend runs on port 4010 with WebSocket support
+- [x] **DEPL-03**: Backend runs on port 4010 with WebSocket support
 - [x] **DEPL-04**: Redis container with persistent volume for cache data
 - [x] **DEPL-05**: Environment variables for all API keys/tokens via .env file
 - [x] **DEPL-06**: Dashboard accessible at http://192.168.1.65:3010
@@ -190,7 +190,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | FLIT-02 | Phase 2 | Pending |
 | FLIT-03 | Phase 2 | Pending |
 | FLIT-04 | Phase 2 | Pending |
-| EQKE-01 | Phase 1 | Pending |
+| EQKE-01 | Phase 1 | Complete |
 | EQKE-02 | Phase 1 | Pending |
 | EQKE-03 | Phase 1 | Pending |
 | SPCM-01 | Phase 2 | Pending |
@@ -216,7 +216,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | MILT-01 | Phase 4 | Pending |
 | MILT-02 | Phase 4 | Pending |
 | MILT-03 | Phase 4 | Pending |
-| WTHR-01 | Phase 1 | Pending |
+| WTHR-01 | Phase 1 | Complete |
 | WTHR-02 | Phase 1 | Pending |
 | WTHR-03 | Phase 1 | Pending |
 | WLDF-01 | Phase 4 | Pending |
@@ -231,16 +231,16 @@ Requirements for initial release. Each maps to roadmap phases.
 | TIME-01 | Phase 3 | Pending |
 | TIME-02 | Phase 3 | Pending |
 | TIME-03 | Phase 3 | Pending |
-| BACK-01 | Phase 1 | Pending |
-| BACK-02 | Phase 1 | Pending |
-| BACK-03 | Phase 1 | Pending |
-| BACK-04 | Phase 1 | Pending |
-| BACK-05 | Phase 1 | Pending |
-| BACK-06 | Phase 1 | Pending |
-| BACK-07 | Phase 1 | Pending |
+| BACK-01 | Phase 1 | Complete |
+| BACK-02 | Phase 1 | Complete |
+| BACK-03 | Phase 1 | Complete |
+| BACK-04 | Phase 1 | Complete |
+| BACK-05 | Phase 1 | Complete |
+| BACK-06 | Phase 1 | Complete |
+| BACK-07 | Phase 1 | Complete |
 | DEPL-01 | Phase 1 | Complete |
 | DEPL-02 | Phase 1 | Complete |
-| DEPL-03 | Phase 1 | Pending |
+| DEPL-03 | Phase 1 | Complete |
 | DEPL-04 | Phase 1 | Complete |
 | DEPL-05 | Phase 1 | Complete |
 | DEPL-06 | Phase 1 | Complete |
