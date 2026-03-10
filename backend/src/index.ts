@@ -1,26 +1,55 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
+import { loadEnv } from './config/env.js';
+import { sourceConfigs } from './config/sources.js';
+import { createServer } from './server.js';
+import { startScheduler } from './services/scheduler.js';
+import { USGSFetcher } from './fetchers/usgs.js';
+import { NWSFetcher } from './fetchers/nws.js';
+import type { ScheduledTask } from 'node-cron';
 
-const app = Fastify({ logger: true });
+const config = loadEnv();
 
-await app.register(cors, { origin: true });
+const { fastify, cache, layerNs } = await createServer(config);
 
-// Health check
-app.get('/api/health', async () => {
-  return {
-    status: 'ok',
-    timestamp: Date.now(),
-  };
-});
+// Instantiate fetchers
+const fetchers = [
+  new USGSFetcher(cache, layerNs),
+  new NWSFetcher(cache, layerNs, config.NWS_USER_AGENT),
+];
 
-// Start server
-const PORT = parseInt(process.env.PORT || '4010', 10);
-const HOST = '0.0.0.0';
+// Start scheduler with staggered initial fetches
+const cronJobs: ScheduledTask[] = startScheduler(fetchers, sourceConfigs);
 
-try {
-  await app.listen({ port: PORT, host: HOST });
-  console.log(`Backend running on http://${HOST}:${PORT}`);
-} catch (err) {
-  app.log.error(err);
-  process.exit(1);
+console.log(
+  `[startup] Geospatial Dashboard backend running on port ${config.PORT}`,
+);
+
+// Graceful shutdown
+async function shutdown(signal: string): Promise<void> {
+  console.log(`[shutdown] Received ${signal}, shutting down gracefully...`);
+
+  // Stop cron jobs
+  for (const job of cronJobs) {
+    job.stop();
+  }
+  console.log('[shutdown] Cron jobs stopped');
+
+  // Disconnect Redis
+  try {
+    await cache.disconnect();
+  } catch (err) {
+    console.error('[shutdown] Redis disconnect error:', err);
+  }
+
+  // Close Fastify (and Socket.IO)
+  try {
+    await fastify.close();
+  } catch (err) {
+    console.error('[shutdown] Fastify close error:', err);
+  }
+
+  console.log('[shutdown] Shutdown complete');
+  process.exit(0);
 }
+
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
