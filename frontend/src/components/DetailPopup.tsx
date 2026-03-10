@@ -39,6 +39,14 @@ function layerBorderColor(layer: string): string {
       return '#ff6b35';
     case 'weather':
       return '#4da6ff';
+    case 'flights':
+      return '#a78bfa';
+    case 'alpr':
+      return '#f472b6';
+    case 'speed_cameras':
+      return '#fb923c';
+    case 'satellites':
+      return '#34d399';
     default:
       return '#888';
   }
@@ -140,6 +148,78 @@ function WeatherDetail({ feature }: { feature: LayerFeature }) {
   );
 }
 
+function FlightDetail({ feature }: { feature: LayerFeature }) {
+  const props = feature.properties;
+  const callsign = (props.callsign as string)?.trim() || 'Unknown';
+  const altitude = props.altitudeFt as number | undefined;
+  const speed = props.speedKnots as number | undefined;
+  const origin = props.originCountry as string | undefined;
+  const onGround = props.onGround as boolean | undefined;
+  const squawk = props.squawk as string | undefined;
+
+  return (
+    <>
+      <h3 className="detail-popup__title">{callsign}</h3>
+      {origin && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Origin</span>
+          <span>{origin}</span>
+        </div>
+      )}
+      {altitude !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Altitude</span>
+          <span>{onGround ? 'On Ground' : `${Math.round(altitude).toLocaleString()} ft`}</span>
+        </div>
+      )}
+      {speed !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Speed</span>
+          <span>{Math.round(speed)} kts</span>
+        </div>
+      )}
+      {squawk && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Squawk</span>
+          <span>{squawk}</span>
+        </div>
+      )}
+    </>
+  );
+}
+
+function SatelliteDetail({ feature }: { feature: LayerFeature }) {
+  const props = feature.properties;
+  const name = props.label || props.OBJECT_NAME as string || 'Unknown';
+  const noradId = props.NORAD_CAT_ID as number | undefined;
+  const altitude = props.altitude_km as number | undefined;
+  const inclination = props.INCLINATION as number | undefined;
+
+  return (
+    <>
+      <h3 className="detail-popup__title">{name}</h3>
+      {noradId && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">NORAD ID</span>
+          <span>{noradId}</span>
+        </div>
+      )}
+      {altitude !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Altitude</span>
+          <span>{Math.round(altitude)} km</span>
+        </div>
+      )}
+      {inclination !== undefined && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Inclination</span>
+          <span>{inclination.toFixed(1)}&deg;</span>
+        </div>
+      )}
+    </>
+  );
+}
+
 function GenericDetail({ feature }: { feature: LayerFeature }) {
   const props = feature.properties;
   return (
@@ -172,7 +252,9 @@ function DetailPopup({ feature, onClose }: DetailPopupProps) {
       </button>
       {layer === 'earthquakes' && <EarthquakeDetail feature={feature} />}
       {layer === 'weather' && <WeatherDetail feature={feature} />}
-      {layer !== 'earthquakes' && layer !== 'weather' && (
+      {layer === 'flights' && <FlightDetail feature={feature} />}
+      {layer === 'satellites' && <SatelliteDetail feature={feature} />}
+      {!['earthquakes', 'weather', 'flights', 'satellites'].includes(layer) && (
         <GenericDetail feature={feature} />
       )}
     </div>

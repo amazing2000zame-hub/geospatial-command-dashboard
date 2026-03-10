@@ -2,6 +2,10 @@ import { useCallback } from 'react';
 import Globe from './components/Globe';
 import EarthquakeLayer from './components/EarthquakeLayer';
 import WeatherLayer from './components/WeatherLayer';
+import FlightLayer from './components/FlightLayer';
+import ALPRLayer from './components/ALPRLayer';
+import SpeedCameraLayer from './components/SpeedCameraLayer';
+import SatelliteLayer from './components/SatelliteLayer';
 import SearchBarBridge from "./components/SearchBarBridge";
 import ZoomControls from "./components/ZoomControls";
 import ControlPanel from './components/ControlPanel';
@@ -24,7 +28,10 @@ function App() {
         {/* Data layers: render as children inside the Viewer, return null */}
         <EarthquakeLayer />
         <WeatherLayer />
-        {/* Future: <FlightLayer />, <ALPRLayer />, <SatelliteLayer /> */}
+        <FlightLayer />
+        <ALPRLayer />
+        <SpeedCameraLayer />
+        <SatelliteLayer />
 
         {/* SearchBar needs viewer access via Globe context */}
         <SearchBarBridge />

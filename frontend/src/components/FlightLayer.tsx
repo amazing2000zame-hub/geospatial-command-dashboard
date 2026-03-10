@@ -1,21 +1,13 @@
 import { useRef, useEffect } from 'react';
+import { useCesium } from 'resium';
 import * as Cesium from 'cesium';
-import { LayerFeature, LayerFeatureCollection } from '../types/geojson';
+import { useLayerData } from '../hooks/useLayerData';
+import { useLayerStore } from '../store/layerStore';
+import { useUiStore } from '../store/uiStore';
+import type { LayerFeature } from '../types/geojson';
 
-interface FlightLayerProps {
-  viewer: Cesium.Viewer | null;
-  data: LayerFeatureCollection | null;
-  visible: boolean;
-  onSelectFeature: (feature: LayerFeature | null) => void;
-}
+const LAYER_ID = 'flights';
 
-/**
- * Color an aircraft billboard by altitude band.
- *   ground       → gray
- *   low  <10kft  → green
- *   mid  10-30k  → cyan
- *   cruise >30k  → white
- */
 function altitudeToColor(altitudeFt: number, onGround: boolean): Cesium.Color {
   if (onGround) return Cesium.Color.GRAY;
   if (altitudeFt < 10_000) return Cesium.Color.LIME;
@@ -23,34 +15,34 @@ function altitudeToColor(altitudeFt: number, onGround: boolean): Cesium.Color {
   return Cesium.Color.WHITE;
 }
 
-function FlightLayer({ viewer, data, visible, onSelectFeature }: FlightLayerProps) {
+function FlightLayer() {
+  const { viewer } = useCesium();
+  const { data, loading, error } = useLayerData(LAYER_ID);
+  const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
+  const setLayerStatus = useLayerStore((s) => s.setLayerStatus);
+  const setLayerUpdated = useLayerStore((s) => s.setLayerUpdated);
+  const selectFeature = useUiStore((s) => s.selectFeature);
+
   const collectionRef = useRef<Cesium.BillboardCollection | null>(null);
   const featureMapRef = useRef<Map<string, LayerFeature>>(new Map());
   const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
 
-  // Create the BillboardCollection when viewer becomes available
+  // Create BillboardCollection + click handler
   useEffect(() => {
     if (!viewer) return;
 
-    const collection = new Cesium.BillboardCollection({
-      scene: viewer.scene,
-    });
+    const collection = new Cesium.BillboardCollection({ scene: viewer.scene });
     viewer.scene.primitives.add(collection);
     collectionRef.current = collection;
 
-    // Set up click handler
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
       const picked = viewer.scene.pick(event.position);
       if (Cesium.defined(picked) && picked.primitive instanceof Cesium.Billboard) {
         const id = picked.primitive.id as string;
         const feature = featureMapRef.current.get(id);
-        if (feature) {
-          onSelectFeature(feature);
-          return;
-        }
+        if (feature) selectFeature(feature);
       }
-      // Don't clear selection on miss -- let other layers handle that
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     handlerRef.current = handler;
 
@@ -65,7 +57,7 @@ function FlightLayer({ viewer, data, visible, onSelectFeature }: FlightLayerProp
       collectionRef.current = null;
       featureMapRef.current.clear();
     };
-  }, [viewer]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [viewer, selectFeature]);
 
   // Update billboards when data changes
   useEffect(() => {
@@ -75,29 +67,16 @@ function FlightLayer({ viewer, data, visible, onSelectFeature }: FlightLayerProp
     collection.removeAll();
     featureMapRef.current.clear();
 
-    if (data && data.features) {
+    if (data?.features) {
       for (const feature of data.features) {
-        if (
-          !feature.geometry ||
-          feature.geometry.type !== 'Point' ||
-          !Array.isArray(feature.geometry.coordinates)
-        ) {
-          continue;
-        }
+        if (!feature.geometry || feature.geometry.type !== 'Point' || !Array.isArray(feature.geometry.coordinates)) continue;
 
-        const coords = feature.geometry.coordinates as number[];
-        const lon = coords[0];
-        const lat = coords[1];
+        const [lon, lat] = feature.geometry.coordinates as number[];
         const id = feature.properties.id;
-
         const altitudeFt = (feature.properties.altitudeFt as number) || 0;
         const onGround = (feature.properties.onGround as boolean) || false;
         const trueTrack = (feature.properties.trueTrack as number | null) ?? 0;
-
-        // Convert heading degrees to radians; CesiumJS rotation is counter-clockwise
-        // and the SVG points north (up), so we negate the track angle
         const rotationRad = -Cesium.Math.toRadians(trueTrack);
-
         const color = altitudeToColor(altitudeFt, onGround);
 
         collection.add({
@@ -113,21 +92,26 @@ function FlightLayer({ viewer, data, visible, onSelectFeature }: FlightLayerProp
 
         featureMapRef.current.set(id, feature);
       }
+
+      setLayerStatus(LAYER_ID, 'active', data.features.length);
+      setLayerUpdated(LAYER_ID);
     }
 
-    if (!viewer.isDestroyed()) {
-      viewer.scene.requestRender();
-    }
-  }, [viewer, data]);
+    if (!viewer.isDestroyed()) viewer.scene.requestRender();
+  }, [viewer, data, setLayerStatus, setLayerUpdated]);
+
+  // Sync status from loading/error
+  useEffect(() => {
+    if (loading) setLayerStatus(LAYER_ID, 'loading', 0);
+    if (error) setLayerStatus(LAYER_ID, 'error', 0, error);
+  }, [loading, error, setLayerStatus]);
 
   // Toggle visibility
   useEffect(() => {
     const collection = collectionRef.current;
     if (collection) {
       collection.show = visible;
-      if (viewer && !viewer.isDestroyed()) {
-        viewer.scene.requestRender();
-      }
+      if (viewer && !viewer.isDestroyed()) viewer.scene.requestRender();
     }
   }, [viewer, visible]);
 
