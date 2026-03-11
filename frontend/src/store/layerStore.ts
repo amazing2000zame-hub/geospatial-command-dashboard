@@ -12,7 +12,7 @@ export interface LayerState {
 export interface LayerConfig {
   id: string;
   displayName: string;
-  group: 'live' | 'surveillance' | 'space' | 'conflict' | 'public-safety';
+  group: 'live' | 'surveillance' | 'space' | 'conflict' | 'public-safety' | 'infrastructure';
   color: string;
   defaultVisible: boolean;
   defaultEnabled: boolean;
@@ -30,6 +30,12 @@ export const LAYER_CONFIGS: LayerConfig[] = [
   { id: 'conflict_events', displayName: 'Conflict Events', group: 'conflict', color: '#ef4444', defaultVisible: true, defaultEnabled: true },
   { id: 'crime_incidents', displayName: 'Crime Data', group: 'public-safety', color: '#e879f9', defaultVisible: true, defaultEnabled: true },
   { id: 'dispatch', displayName: 'Fire/EMS Dispatch', group: 'public-safety', color: '#38bdf8', defaultVisible: true, defaultEnabled: true },
+  { id: 'vessels', displayName: 'Vessel Tracking', group: 'live', color: '#06b6d4', defaultVisible: true, defaultEnabled: true },
+  { id: 'cyber_threats', displayName: 'Cyber Threats', group: 'conflict', color: '#a855f7', defaultVisible: true, defaultEnabled: true },
+  { id: 'submarine_cables', displayName: 'Submarine Cables', group: 'infrastructure', color: '#00ffff', defaultVisible: true, defaultEnabled: true },
+  { id: 'nuclear_facilities', displayName: 'Nuclear Facilities', group: 'infrastructure', color: '#84cc16', defaultVisible: true, defaultEnabled: true },
+  { id: 'power_grid', displayName: 'Power Grid', group: 'infrastructure', color: '#fbbf24', defaultVisible: true, defaultEnabled: true },
+  { id: 'home_cameras', displayName: 'Home Cameras', group: 'surveillance', color: '#00ffc8', defaultVisible: true, defaultEnabled: true },
 ];
 
 function buildInitialLayers(): Record<string, LayerState> {

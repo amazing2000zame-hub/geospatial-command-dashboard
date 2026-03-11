@@ -20,6 +20,8 @@ interface UiStore {
   closeStreetView: () => void;
   timeFilter: TimeFilter | null;
   setTimeFilter: (filter: TimeFilter | null) => void;
+  playbackActive: boolean;
+  setPlaybackActive: (active: boolean) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -34,4 +36,6 @@ export const useUiStore = create<UiStore>((set) => ({
   closeStreetView: () => set({ streetViewCoords: null }),
   timeFilter: null,
   setTimeFilter: (filter) => set({ timeFilter: filter }),
+  playbackActive: false,
+  setPlaybackActive: (active) => set({ playbackActive: active }),
 }));

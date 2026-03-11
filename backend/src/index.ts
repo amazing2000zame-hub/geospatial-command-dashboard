@@ -14,15 +14,21 @@ import { FIRMSFetcher } from './fetchers/firms.js';
 import { GDELTConflictFetcher } from './fetchers/gdelt.js';
 import { CrimeFetcher } from './fetchers/crime.js';
 import { DispatchFetcher } from './fetchers/dispatch.js';
+import { VesselFetcher } from './fetchers/vessels.js';
 import { NewsRssFetcher } from './fetchers/news-rss.js';
 import { EconomyFetcher } from './fetchers/economy.js';
 import { SituationsFetcher } from './fetchers/situations.js';
 import { ScannerFetcher } from './fetchers/scanner.js';
+import { CyberThreatFetcher } from './fetchers/cyber-threats.js';
+import { SubmarineCableFetcher } from './fetchers/submarine-cables.js';
+import { NuclearFacilityFetcher } from './fetchers/nuclear.js';
+import { HomeCameraFetcher } from './fetchers/home-cameras.js';
+import { PowerOutageFetcher } from './fetchers/power-outages.js';
 import type { ScheduledTask } from 'node-cron';
 
 const config = loadEnv();
 
-const { fastify, cache, layerNs } = await createServer(config);
+const { fastify, cache, layerNs, alertEngine } = await createServer(config);
 
 // Create OpenSky auth manager (gracefully handles missing credentials)
 const openSkyAuth = new OpenSkyAuth(
@@ -43,7 +49,19 @@ const fetchers = [
   new GDELTConflictFetcher(cache, layerNs),
   new CrimeFetcher(cache, layerNs),
   new DispatchFetcher(cache, layerNs),
+  new VesselFetcher(cache, layerNs),
+  new CyberThreatFetcher(cache, layerNs),
+  new SubmarineCableFetcher(cache, layerNs),
+  new NuclearFacilityFetcher(cache, layerNs),
+  new HomeCameraFetcher(cache, layerNs),
+  new PowerOutageFetcher(cache, layerNs),
 ];
+
+// Attach alert rules engine to all fetchers
+for (const fetcher of fetchers) {
+  fetcher.setAlertEngine(alertEngine);
+}
+console.log('[startup] Alert rules engine attached to all fetchers');
 
 // Start scheduler with staggered initial fetches
 const cronJobs: ScheduledTask[] = startScheduler(fetchers, sourceConfigs);

@@ -11,7 +11,7 @@ export interface LayerFeatureProperties {
 export interface LayerFeature {
   type: 'Feature';
   geometry: {
-    type: 'Point' | 'Polygon' | 'MultiPolygon';
+    type: 'Point' | 'Polygon' | 'MultiPolygon' | 'LineString' | 'MultiLineString';
     coordinates: number[] | number[][] | number[][][] | number[][][][];
   };
   properties: LayerFeatureProperties;

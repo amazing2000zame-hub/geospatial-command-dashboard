@@ -1,5 +1,6 @@
 import type { Namespace } from 'socket.io';
 import type { CacheService } from '../services/cache.js';
+import type { AlertRulesEngine } from '../services/alert-rules.js';
 import type { LayerFeatureCollection } from '../types/geojson.js';
 
 export abstract class BaseFetcher {
@@ -10,10 +11,18 @@ export abstract class BaseFetcher {
 
   protected cache: CacheService;
   protected io: Namespace;
+  private alertEngine: AlertRulesEngine | null = null;
 
   constructor(cache: CacheService, io: Namespace) {
     this.cache = cache;
     this.io = io;
+  }
+
+  /**
+   * Attach an alert rules engine to evaluate after each fetch cycle.
+   */
+  setAlertEngine(engine: AlertRulesEngine): void {
+    this.alertEngine = engine;
   }
 
   /**
@@ -59,6 +68,18 @@ export abstract class BaseFetcher {
         count: normalized.features.length,
         fetchedAt: Date.now(),
       });
+
+      // Evaluate alert rules against normalized data
+      if (this.alertEngine) {
+        try {
+          await this.alertEngine.evaluate(this.sourceId, normalized);
+        } catch (alertErr) {
+          console.error(
+            `[${this.sourceId}] Alert evaluation error:`,
+            alertErr instanceof Error ? alertErr.message : alertErr,
+          );
+        }
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[${this.sourceId}] Fetch failed:`, message);

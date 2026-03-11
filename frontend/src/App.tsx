@@ -11,6 +11,12 @@ import FireLayer from './components/FireLayer';
 import ConflictLayer from './components/ConflictLayer';
 import CrimeLayer from './components/CrimeLayer';
 import DispatchLayer from './components/DispatchLayer';
+import VesselLayer from './components/VesselLayer';
+import CyberThreatLayer from './components/CyberThreatLayer';
+import SubmarineCableLayer from './components/SubmarineCableLayer';
+import NuclearLayer from './components/NuclearLayer';
+import PowerGridLayer from './components/PowerGridLayer';
+import HomeCameraLayer from './components/HomeCameraLayer';
 import HoverTooltip from './components/HoverTooltip';
 import SearchBarBridge from './components/SearchBarBridge';
 import ZoomControls from './components/ZoomControls';
@@ -22,6 +28,8 @@ import ModeSelector from './components/ModeSelector';
 import StreetView from './components/StreetView';
 import IntelPanel from './components/IntelPanel';
 import TimeRangeFilter from './components/TimeRangeFilter';
+import AlertRules from './components/AlertRules';
+import HistoricalPlayback from './components/HistoricalPlayback';
 import { useUiStore } from './store/uiStore';
 import './App.css';
 
@@ -58,6 +66,12 @@ function App() {
         <ConflictLayer />
         <CrimeLayer />
         <DispatchLayer />
+        <VesselLayer />
+        <CyberThreatLayer />
+        <SubmarineCableLayer />
+        <NuclearLayer />
+        <PowerGridLayer />
+        <HomeCameraLayer />
 
         {/* Hover tooltip for all layers */}
         <HoverTooltip />
@@ -71,6 +85,8 @@ function App() {
       <StreetView />
       <IntelPanel />
       <TimeRangeFilter />
+      <AlertRules />
+      <HistoricalPlayback />
     </>
   );
 }

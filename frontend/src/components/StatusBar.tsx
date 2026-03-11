@@ -37,6 +37,12 @@ function StatusBar() {
           : config.id === 'speed_cameras' ? 'SPD'
           : config.id === 'crime_incidents' ? 'CRM'
           : config.id === 'dispatch' ? 'DSP'
+          : config.id === 'vessels' ? 'VES'
+          : config.id === 'cyber_threats' ? 'CYB'
+          : config.id === 'submarine_cables' ? 'CBL'
+          : config.id === 'nuclear_facilities' ? 'NUK'
+          : config.id === 'power_grid' ? 'PWR'
+          : config.id === 'home_cameras' ? 'HOM'
           : config.id.slice(0, 3).toUpperCase();
         return (
           <span key={config.id} className="status-bar__item" title={isError ? (state.error || 'Error') : config.displayName}>

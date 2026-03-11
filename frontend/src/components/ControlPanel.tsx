@@ -5,9 +5,10 @@ const GROUP_LABELS: Record<string, string> = {
   surveillance: 'SURVEILLANCE',
   space: 'SPACE',
   conflict: 'CONFLICT / MILITARY',
+  infrastructure: 'INFRASTRUCTURE',
 };
 
-const GROUP_ORDER = ['live', 'surveillance', 'space', 'conflict'];
+const GROUP_ORDER = ['live', 'surveillance', 'space', 'conflict', 'infrastructure'];
 
 function groupedConfigs(): Record<string, LayerConfig[]> {
   const groups: Record<string, LayerConfig[]> = {};

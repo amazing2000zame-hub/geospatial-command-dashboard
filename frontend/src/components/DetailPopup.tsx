@@ -59,6 +59,18 @@ function layerBorderColor(layer: string): string {
       return '#a855f7';
     case 'dispatch':
       return '#38bdf8';
+    case 'vessels':
+      return '#06b6d4';
+    case 'cyber_threats':
+      return '#a855f7';
+    case 'submarine_cables':
+      return '#00ffff';
+    case 'nuclear_facilities':
+      return '#84cc16';
+    case 'power_grid':
+      return '#fbbf24';
+    case 'home_cameras':
+      return '#00ffc8';
     default:
       return '#888';
   }
@@ -764,6 +776,139 @@ function GenericDetail({ feature }: { feature: LayerFeature }) {
   );
 }
 
+function VesselDetail({ feature }: { feature: LayerFeature }) {
+  const p = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const shipTypes: Record<string, string> = {
+    cargo: 'Cargo', tanker: 'Tanker', passenger: 'Passenger', military: 'Military',
+    fishing: 'Fishing', utility: 'Utility', pleasure: 'Pleasure', other: 'Other',
+  };
+  const typeColors: Record<string, string> = {
+    cargo: '#22c55e', tanker: '#f59e0b', passenger: '#3b82f6', military: '#ef4444',
+    fishing: '#06b6d4', utility: '#a78bfa', pleasure: '#f472b6', other: '#6b7280',
+  };
+  const cat = String(p.category || 'other');
+  return (
+    <>
+      <h3 className="detail-popup__title" style={{ color: typeColors[cat] || '#06b6d4' }}>
+        {String(p.vesselName || p.label)}
+      </h3>
+      <div className="detail-popup__row"><span className="detail-popup__label">Type</span><span>{shipTypes[cat] || cat}</span></div>
+      {p.mmsi && <div className="detail-popup__row"><span className="detail-popup__label">MMSI</span><span>{String(p.mmsi)}</span></div>}
+      {p.imo && <div className="detail-popup__row"><span className="detail-popup__label">IMO</span><span>{String(p.imo)}</span></div>}
+      {p.callSign && <div className="detail-popup__row"><span className="detail-popup__label">Call Sign</span><span>{String(p.callSign)}</span></div>}
+      {p.destination && <div className="detail-popup__row"><span className="detail-popup__label">Destination</span><span>{String(p.destination)}</span></div>}
+      {p.sog !== undefined && <div className="detail-popup__row"><span className="detail-popup__label">Speed</span><span>{Number(p.sog).toFixed(1)} kn</span></div>}
+      {p.heading !== undefined && <div className="detail-popup__row"><span className="detail-popup__label">Heading</span><span>{String(p.heading)}&deg;</span></div>}
+      <div className="detail-popup__row"><span className="detail-popup__label">Position</span><span>{formatCoords(coords)}</span></div>
+    </>
+  );
+}
+
+function CyberThreatDetail({ feature }: { feature: LayerFeature }) {
+  const p = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const typeColors: Record<string, string> = { ddos: '#ef4444', scanning: '#f97316', malware: '#a855f7', probe: '#6b7280' };
+  const cat = String(p.attackType || p.category || 'probe');
+  return (
+    <>
+      <h3 className="detail-popup__title" style={{ color: typeColors[cat] || '#a855f7' }}>Cyber Threat: {cat.toUpperCase()}</h3>
+      {p.ip && <div className="detail-popup__row"><span className="detail-popup__label">IP</span><span style={{ fontFamily: 'monospace' }}>{String(p.ip)}</span></div>}
+      {p.country && <div className="detail-popup__row"><span className="detail-popup__label">Country</span><span>{String(p.country)}</span></div>}
+      {p.city && <div className="detail-popup__row"><span className="detail-popup__label">City</span><span>{String(p.city)}</span></div>}
+      {p.isp && <div className="detail-popup__row"><span className="detail-popup__label">ISP</span><span>{truncate(String(p.isp), 30)}</span></div>}
+      {p.reports && <div className="detail-popup__row"><span className="detail-popup__label">Reports</span><span>{Number(p.reports).toLocaleString()}</span></div>}
+      {p.targets && <div className="detail-popup__row"><span className="detail-popup__label">Targets</span><span>{Number(p.targets).toLocaleString()}</span></div>}
+      <div className="detail-popup__row"><span className="detail-popup__label">Position</span><span>{formatCoords(coords)}</span></div>
+    </>
+  );
+}
+
+function SubmarineCableDetail({ feature }: { feature: LayerFeature }) {
+  const p = feature.properties;
+  return (
+    <>
+      <h3 className="detail-popup__title" style={{ color: String(p.cableColor || '#00ffff') }}>{String(p.cableName || p.label)}</h3>
+      <div className="detail-popup__row"><span className="detail-popup__label">Type</span><span>Submarine Cable</span></div>
+      <div className="detail-popup__row"><span className="detail-popup__label">ID</span><span style={{ fontFamily: 'monospace', fontSize: '10px' }}>{String(p.id)}</span></div>
+    </>
+  );
+}
+
+function NuclearDetail({ feature }: { feature: LayerFeature }) {
+  const p = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const statusColors: Record<string, string> = { operating: '#22c55e', shutdown: '#6b7280', under_construction: '#f59e0b', decommissioning: '#ef4444' };
+  const status = String(p.status || p.category || 'operating');
+  return (
+    <>
+      <h3 className="detail-popup__title" style={{ color: statusColors[status] || '#84cc16' }}>&#9762; {String(p.plantName || p.label)}</h3>
+      <div className="detail-popup__row"><span className="detail-popup__label">Country</span><span>{String(p.country || '')}</span></div>
+      <div className="detail-popup__row"><span className="detail-popup__label">Status</span><span style={{ color: statusColors[status] }}>{status.replace(/_/g, ' ').toUpperCase()}</span></div>
+      {p.reactorCount && <div className="detail-popup__row"><span className="detail-popup__label">Reactors</span><span>{String(p.reactorCount)}</span></div>}
+      {p.reactorType && <div className="detail-popup__row"><span className="detail-popup__label">Type</span><span>{String(p.reactorType)}</span></div>}
+      {p.capacity_mw && <div className="detail-popup__row"><span className="detail-popup__label">Capacity</span><span>{Number(p.capacity_mw).toLocaleString()} MW</span></div>}
+      <div className="detail-popup__row"><span className="detail-popup__label">Position</span><span>{formatCoords(coords)}</span></div>
+    </>
+  );
+}
+
+function PowerGridDetail({ feature }: { feature: LayerFeature }) {
+  const p = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const kind = String(p.featureKind || 'infrastructure');
+
+  if (kind === 'outage') {
+    return (
+      <>
+        <h3 className="detail-popup__title" style={{ color: '#ef4444' }}>&#9889; Power Outage - {String(p.state)}</h3>
+        <div className="detail-popup__row"><span className="detail-popup__label">Customers Out</span><span>{Number(p.customersOut).toLocaleString()}</span></div>
+        <div className="detail-popup__row"><span className="detail-popup__label">Total Tracked</span><span>{Number(p.customersTotal).toLocaleString()}</span></div>
+        <div className="detail-popup__row"><span className="detail-popup__label">Percent Out</span><span style={{ color: '#ef4444' }}>{Number(p.percentOut).toFixed(2)}%</span></div>
+      </>
+    );
+  }
+  return (
+    <>
+      <h3 className="detail-popup__title" style={{ color: String(p.typeColor || '#fbbf24') }}>{String(p.label)}</h3>
+      <div className="detail-popup__row"><span className="detail-popup__label">Type</span><span>{String(p.plantType || '').toUpperCase()}</span></div>
+      <div className="detail-popup__row"><span className="detail-popup__label">State</span><span>{String(p.state || '')}</span></div>
+      {p.capacity_mw && <div className="detail-popup__row"><span className="detail-popup__label">Capacity</span><span>{Number(p.capacity_mw).toLocaleString()} MW</span></div>}
+      <div className="detail-popup__row"><span className="detail-popup__label">Position</span><span>{formatCoords(coords)}</span></div>
+    </>
+  );
+}
+
+function HomeCameraDetail({ feature }: { feature: LayerFeature }) {
+  const p = feature.properties;
+  const cat = String(p.category || 'camera');
+
+  if (cat === 'alpr_detection') {
+    return (
+      <>
+        <h3 className="detail-popup__title" style={{ color: '#fbbf24' }}>License Plate Detection</h3>
+        <div className="detail-popup__row"><span className="detail-popup__label">Plate</span><span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{String(p.plate)}</span></div>
+        {p.confidence && <div className="detail-popup__row"><span className="detail-popup__label">Confidence</span><span>{(Number(p.confidence) * 100).toFixed(1)}%</span></div>}
+        {p.vehicleType && <div className="detail-popup__row"><span className="detail-popup__label">Vehicle</span><span>{String(p.vehicleType)}</span></div>}
+        {p.vehicleColor && <div className="detail-popup__row"><span className="detail-popup__label">Color</span><span>{String(p.vehicleColor)}</span></div>}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h3 className="detail-popup__title" style={{ color: '#00ffc8' }}>{String(p.label)}</h3>
+      <div className="detail-popup__row"><span className="detail-popup__label">Status</span><span style={{ color: p.haAvailable ? '#22c55e' : '#ef4444' }}>{p.haAvailable ? 'ONLINE' : 'OFFLINE'}</span></div>
+      <div className="detail-popup__row"><span className="detail-popup__label">Entity</span><span style={{ fontSize: '10px', fontFamily: 'monospace' }}>{String(p.entityId || '')}</span></div>
+      {p.snapshotUrl && (
+        <div style={{ marginTop: '8px' }}>
+          <img src={String(p.snapshotUrl)} alt="Camera" style={{ width: '100%', borderRadius: '4px', border: '1px solid rgba(0,255,200,0.3)' }} />
+        </div>
+      )}
+    </>
+  );
+}
+
 function DetailPopup({ feature, onClose }: DetailPopupProps) {
   if (!feature) return null;
 
@@ -805,6 +950,24 @@ function DetailPopup({ feature, onClose }: DetailPopupProps) {
       break;
     case 'dispatch':
       content = <DispatchDetail feature={feature} />;
+      break;
+    case 'vessels':
+      content = <VesselDetail feature={feature} />;
+      break;
+    case 'cyber_threats':
+      content = <CyberThreatDetail feature={feature} />;
+      break;
+    case 'submarine_cables':
+      content = <SubmarineCableDetail feature={feature} />;
+      break;
+    case 'nuclear_facilities':
+      content = <NuclearDetail feature={feature} />;
+      break;
+    case 'power_grid':
+      content = <PowerGridDetail feature={feature} />;
+      break;
+    case 'home_cameras':
+      content = <HomeCameraDetail feature={feature} />;
       break;
     default:
       content = <GenericDetail feature={feature} />;
