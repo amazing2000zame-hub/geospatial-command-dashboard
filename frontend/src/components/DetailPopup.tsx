@@ -55,6 +55,10 @@ function layerBorderColor(layer: string): string {
       return '#ff6b35';
     case 'conflict_events':
       return '#ef4444';
+    case 'crime_incidents':
+      return '#a855f7';
+    case 'dispatch':
+      return '#38bdf8';
     default:
       return '#888';
   }
@@ -633,6 +637,109 @@ function ConflictDetail({ feature }: { feature: LayerFeature }) {
   );
 }
 
+function CrimeDetail({ feature }: { feature: LayerFeature }) {
+  const props = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const offense = (props.offense as string) || props.label || 'Unknown Offense';
+  const city = props.city as string | undefined;
+  const address = props.address as string | undefined;
+  const status = props.status as string | undefined;
+
+  return (
+    <>
+      <h3 className="detail-popup__title">{offense}</h3>
+      <span className="detail-popup__badge" style={{ backgroundColor: '#a855f7' }}>
+        CRIME
+      </span>
+      {city && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">City</span>
+          <span>{city}</span>
+        </div>
+      )}
+      {address && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Address</span>
+          <span>{address}</span>
+        </div>
+      )}
+      {status && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Status</span>
+          <span>{status}</span>
+        </div>
+      )}
+      {props.timestamp > 0 && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Time</span>
+          <span>{formatTimestamp(props.timestamp)}</span>
+        </div>
+      )}
+      <div className="detail-popup__row">
+        <span className="detail-popup__label">Position</span>
+        <span>{formatCoords(coords)}</span>
+      </div>
+    </>
+  );
+}
+
+function DispatchDetail({ feature }: { feature: LayerFeature }) {
+  const props = feature.properties;
+  const coords = feature.geometry.coordinates as number[];
+  const incidentType = props.label || 'Dispatch';
+  const city = props.city as string | undefined;
+  const address = props.address as string | undefined;
+  const unit = props.unit as string | undefined;
+  const status = props.status as string | undefined;
+  const category = props.category as string | undefined;
+
+  return (
+    <>
+      <h3 className="detail-popup__title">{incidentType}</h3>
+      <span
+        className="detail-popup__badge"
+        style={{ backgroundColor: category === 'fire' ? '#ff6b35' : '#38bdf8' }}
+      >
+        {category === 'fire' ? 'FIRE' : 'EMS'}
+      </span>
+      {city && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">City</span>
+          <span>{city}</span>
+        </div>
+      )}
+      {address && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Address</span>
+          <span>{address}</span>
+        </div>
+      )}
+      {unit && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Unit</span>
+          <span>{unit}</span>
+        </div>
+      )}
+      {status && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Status</span>
+          <span>{status}</span>
+        </div>
+      )}
+      {props.timestamp > 0 && (
+        <div className="detail-popup__row">
+          <span className="detail-popup__label">Time</span>
+          <span>{formatTimestamp(props.timestamp)}</span>
+        </div>
+      )}
+      <div className="detail-popup__row">
+        <span className="detail-popup__label">Position</span>
+        <span>{formatCoords(coords)}</span>
+      </div>
+    </>
+  );
+}
+
 function GenericDetail({ feature }: { feature: LayerFeature }) {
   const props = feature.properties;
   const coords = feature.geometry.coordinates as number[];
@@ -692,6 +799,12 @@ function DetailPopup({ feature, onClose }: DetailPopupProps) {
       break;
     case 'conflict_events':
       content = <ConflictDetail feature={feature} />;
+      break;
+    case 'crime_incidents':
+      content = <CrimeDetail feature={feature} />;
+      break;
+    case 'dispatch':
+      content = <DispatchDetail feature={feature} />;
       break;
     default:
       content = <GenericDetail feature={feature} />;

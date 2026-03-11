@@ -9,6 +9,8 @@ import SatelliteLayer from './components/SatelliteLayer';
 import TrafficCameraLayer from './components/TrafficCameraLayer';
 import FireLayer from './components/FireLayer';
 import ConflictLayer from './components/ConflictLayer';
+import CrimeLayer from './components/CrimeLayer';
+import DispatchLayer from './components/DispatchLayer';
 import HoverTooltip from './components/HoverTooltip';
 import SearchBarBridge from './components/SearchBarBridge';
 import ZoomControls from './components/ZoomControls';
@@ -19,6 +21,7 @@ import HudOverlay from './components/HudOverlay';
 import ModeSelector from './components/ModeSelector';
 import StreetView from './components/StreetView';
 import IntelPanel from './components/IntelPanel';
+import TimeRangeFilter from './components/TimeRangeFilter';
 import { useUiStore } from './store/uiStore';
 import './App.css';
 
@@ -53,6 +56,8 @@ function App() {
         <TrafficCameraLayer />
         <FireLayer />
         <ConflictLayer />
+        <CrimeLayer />
+        <DispatchLayer />
 
         {/* Hover tooltip for all layers */}
         <HoverTooltip />
@@ -65,6 +70,7 @@ function App() {
       <DetailPopup feature={selectedFeature} onClose={handleClosePopup} />
       <StreetView />
       <IntelPanel />
+      <TimeRangeFilter />
     </>
   );
 }

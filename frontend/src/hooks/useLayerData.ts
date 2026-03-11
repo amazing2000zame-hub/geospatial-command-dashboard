@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useWebSocket } from './useWebSocket';
+import { useUiStore } from '../store/uiStore';
 import type { LayerFeatureCollection } from '../types/geojson';
 
 interface LayerDataEvent {
@@ -9,9 +10,10 @@ interface LayerDataEvent {
 
 export function useLayerData(layerId: string) {
   const { socket, subscribeLayer, unsubscribeLayer } = useWebSocket();
-  const [data, setData] = useState<LayerFeatureCollection | null>(null);
+  const [rawData, setRawData] = useState<LayerFeatureCollection | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const timeFilter = useUiStore((s) => s.timeFilter);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +29,7 @@ export function useLayerData(layerId: string) {
         }
         const json: LayerFeatureCollection = await response.json();
         if (!cancelled) {
-          setData(json);
+          setRawData(json);
           setLoading(false);
         }
       } catch (err) {
@@ -45,7 +47,7 @@ export function useLayerData(layerId: string) {
 
     function onData(event: LayerDataEvent) {
       if (event.layerId === layerId && !cancelled) {
-        setData(event.data);
+        setRawData(event.data);
         setLoading(false);
         setError(null);
       }
@@ -59,6 +61,24 @@ export function useLayerData(layerId: string) {
       unsubscribeLayer(layerId);
     };
   }, [layerId, socket, subscribeLayer, unsubscribeLayer]);
+
+  // Apply time filter to features
+  const data = useMemo<LayerFeatureCollection | null>(() => {
+    if (!rawData) return null;
+    if (!timeFilter) return rawData;
+
+    const filtered = rawData.features.filter((f) => {
+      const ts = f.properties?.timestamp;
+      if (typeof ts !== 'number') return true; // keep features without timestamps
+      return ts >= timeFilter.start && ts <= timeFilter.end;
+    });
+
+    return {
+      type: 'FeatureCollection' as const,
+      features: filtered,
+      metadata: rawData.metadata ? { ...rawData.metadata, count: filtered.length } : undefined,
+    };
+  }, [rawData, timeFilter]);
 
   return { data, loading, error };
 }

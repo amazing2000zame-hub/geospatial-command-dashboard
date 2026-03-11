@@ -31,15 +31,28 @@ interface Situation {
   summary: string;
 }
 
-type Tab = 'news' | 'situations' | 'economy';
+interface ScannerCall {
+  id: string;
+  system: string;
+  systemLabel: string;
+  talkgroup: string;
+  freq: number;
+  audioUrl: string;
+  time: string;
+  duration: number;
+  starred: boolean;
+}
+
+type Tab = 'news' | 'situations' | 'economy' | 'scanner';
 
 const TAB_LABELS: Record<Tab, string> = {
   news: 'NEWS',
   situations: 'SITUATIONS',
   economy: 'ECONOMY',
+  scanner: 'SCANNER',
 };
 
-const DEFAULT_TAB_ORDER: Tab[] = ['news', 'situations', 'economy'];
+const DEFAULT_TAB_ORDER: Tab[] = ['news', 'situations', 'economy', 'scanner'];
 
 let intelSocket: Socket | null = null;
 
@@ -78,12 +91,13 @@ function IntelPanel() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [economy, setEconomy] = useState<EconomyData | null>(null);
   const [situations, setSituations] = useState<Situation[]>([]);
+  const [scanner, setScanner] = useState<ScannerCall[]>([]);
   const [tabOrder, setTabOrder] = useState<Tab[]>(() => {
     try {
       const saved = localStorage.getItem('intel-tab-order');
       if (saved) {
         const parsed = JSON.parse(saved) as Tab[];
-        if (parsed.length === 3 && DEFAULT_TAB_ORDER.every(t => parsed.includes(t))) {
+        if (parsed.length === DEFAULT_TAB_ORDER.length && DEFAULT_TAB_ORDER.every(t => parsed.includes(t))) {
           return parsed;
         }
       }
@@ -110,6 +124,11 @@ function IntelPanel() {
         case 'situations': {
           const d = payload.data as { situations?: Situation[] };
           setSituations(d.situations || []);
+          break;
+        }
+        case 'scanner': {
+          const d = payload.data as { calls?: ScannerCall[] };
+          setScanner(d.calls || []);
           break;
         }
       }
@@ -165,8 +184,9 @@ function IntelPanel() {
   const badgeCount = useCallback((t: Tab): number | null => {
     if (t === 'news' && news.length > 0) return news.length;
     if (t === 'situations' && situations.length > 0) return situations.length;
+    if (t === 'scanner' && scanner.length > 0) return scanner.length;
     return null;
-  }, [news.length, situations.length]);
+  }, [news.length, situations.length, scanner.length]);
 
   if (collapsed) {
     return (
@@ -215,12 +235,15 @@ function IntelPanel() {
         {tab === 'news' && <NewsTab items={news} />}
         {tab === 'situations' && <SituationsTab items={situations} />}
         {tab === 'economy' && <EconomyTab data={economy} />}
+        {tab === 'scanner' && <ScannerTab calls={scanner} />}
       </div>
     </div>
   );
 }
 
 function NewsTab({ items }: { items: NewsItem[] }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+
   if (items.length === 0) {
     return <div className="intel-panel__empty">Loading news feed...</div>;
   }
@@ -228,24 +251,41 @@ function NewsTab({ items }: { items: NewsItem[] }) {
   return (
     <div className="intel-panel__list">
       {items.slice(0, 30).map((item, i) => (
-        <a
+        <div
           key={i}
-          className="intel-panel__news-item"
-          href={item.link}
-          target="_blank"
-          rel="noopener noreferrer"
+          className={`intel-panel__news-item ${expanded === i ? 'intel-panel__news-item--expanded' : ''}`}
+          onClick={() => setExpanded(expanded === i ? null : i)}
         >
           <div className="intel-panel__news-header">
             <span className="intel-panel__news-source">{item.source}</span>
             <span className="intel-panel__news-time">{timeAgo(item.pubDate)}</span>
           </div>
           <div className="intel-panel__news-title">{item.title}</div>
-          {item.summary && (
-            <div className="intel-panel__news-summary">
-              {item.summary.slice(0, 120)}{item.summary.length > 120 ? '...' : ''}
-            </div>
+          {expanded === i ? (
+            <>
+              {item.summary && (
+                <div className="intel-panel__news-summary">{item.summary}</div>
+              )}
+              {item.link && (
+                <a
+                  className="intel-panel__news-link"
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Open article &#8599;
+                </a>
+              )}
+            </>
+          ) : (
+            item.summary && (
+              <div className="intel-panel__news-summary">
+                {item.summary.slice(0, 80)}{item.summary.length > 80 ? '...' : ''}
+              </div>
+            )
           )}
-        </a>
+        </div>
       ))}
     </div>
   );
@@ -355,6 +395,68 @@ function EconomyTab({ data }: { data: EconomyData | null }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ScannerTab({ calls }: { calls: ScannerCall[] }) {
+  const [playing, setPlaying] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = useCallback((call: ScannerCall) => {
+    if (playing === call.id) {
+      audioRef.current?.pause();
+      setPlaying(null);
+      return;
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    const audio = new Audio(call.audioUrl);
+    audio.play().catch(() => {});
+    audio.onended = () => setPlaying(null);
+    audioRef.current = audio;
+    setPlaying(call.id);
+  }, [playing]);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  if (calls.length === 0) {
+    return (
+      <div className="intel-panel__empty">
+        <div>No scanner audio available</div>
+        <div style={{ fontSize: '10px', opacity: 0.5, marginTop: '4px' }}>OpenMHz API currently unavailable</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="intel-panel__list">
+      {calls.slice(0, 30).map((call) => (
+        <div
+          key={call.id}
+          className={`intel-panel__scanner-item ${playing === call.id ? 'intel-panel__scanner-item--playing' : ''}`}
+          onClick={() => togglePlay(call)}
+        >
+          <div className="intel-panel__scanner-header">
+            <span className="intel-panel__scanner-system">{call.systemLabel}</span>
+            <span className="intel-panel__scanner-time">{timeAgo(call.time)}</span>
+          </div>
+          <div className="intel-panel__scanner-talkgroup">{call.talkgroup || `${(call.freq / 1e6).toFixed(3)} MHz`}</div>
+          <div className="intel-panel__scanner-meta">
+            <span className="intel-panel__scanner-duration">{call.duration}s</span>
+            {playing === call.id && <span className="intel-panel__scanner-playing">PLAYING</span>}
+            {call.starred && <span className="intel-panel__scanner-star">&#9733;</span>}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

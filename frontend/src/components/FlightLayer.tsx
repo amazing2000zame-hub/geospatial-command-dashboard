@@ -94,6 +94,7 @@ function FlightLayer() {
           alignedAxis: Cesium.Cartesian3.UNIT_Z,
           color,
           id,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
 
         featureMapRef.current.set(id, feature);

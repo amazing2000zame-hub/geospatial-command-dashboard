@@ -160,6 +160,7 @@ function ConflictLayer() {
           width: 36,
           height: 36,
           id,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
 
         featureMapRef.current.set(id, feature);

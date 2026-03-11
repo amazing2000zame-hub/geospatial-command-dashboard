@@ -7,6 +7,7 @@ const INTEL_KEYS = {
   news: 'intel:news',
   economy: 'intel:economy',
   situations: 'intel:situations',
+  scanner: 'intel:scanner',
 } as const;
 
 export interface WebSocketResult {

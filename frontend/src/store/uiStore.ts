@@ -3,6 +3,11 @@ import type { LayerFeature } from '../types/geojson';
 
 export type ImageryMode = 'satellite' | 'map' | 'hybrid';
 
+export interface TimeFilter {
+  start: number; // unix seconds
+  end: number;   // unix seconds
+}
+
 interface UiStore {
   coords: { lat: number; lng: number } | null;
   setCoords: (coords: { lat: number; lng: number } | null) => void;
@@ -13,6 +18,8 @@ interface UiStore {
   streetViewCoords: { lat: number; lng: number } | null;
   openStreetView: (lat: number, lng: number) => void;
   closeStreetView: () => void;
+  timeFilter: TimeFilter | null;
+  setTimeFilter: (filter: TimeFilter | null) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -25,4 +32,6 @@ export const useUiStore = create<UiStore>((set) => ({
   streetViewCoords: null,
   openStreetView: (lat, lng) => set({ streetViewCoords: { lat, lng } }),
   closeStreetView: () => set({ streetViewCoords: null }),
+  timeFilter: null,
+  setTimeFilter: (filter) => set({ timeFilter: filter }),
 }));

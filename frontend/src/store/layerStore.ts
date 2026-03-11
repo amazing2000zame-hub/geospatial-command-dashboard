@@ -12,7 +12,7 @@ export interface LayerState {
 export interface LayerConfig {
   id: string;
   displayName: string;
-  group: 'live' | 'surveillance' | 'space' | 'conflict';
+  group: 'live' | 'surveillance' | 'space' | 'conflict' | 'public-safety';
   color: string;
   defaultVisible: boolean;
   defaultEnabled: boolean;
@@ -28,6 +28,8 @@ export const LAYER_CONFIGS: LayerConfig[] = [
   { id: 'satellites', displayName: 'Satellites', group: 'space', color: '#34d399', defaultVisible: true, defaultEnabled: true },
   { id: 'active_fires', displayName: 'Active Fires', group: 'conflict', color: '#ff6b35', defaultVisible: true, defaultEnabled: true },
   { id: 'conflict_events', displayName: 'Conflict Events', group: 'conflict', color: '#ef4444', defaultVisible: true, defaultEnabled: true },
+  { id: 'crime_incidents', displayName: 'Crime Data', group: 'public-safety', color: '#e879f9', defaultVisible: true, defaultEnabled: true },
+  { id: 'dispatch', displayName: 'Fire/EMS Dispatch', group: 'public-safety', color: '#38bdf8', defaultVisible: true, defaultEnabled: true },
 ];
 
 function buildInitialLayers(): Record<string, LayerState> {

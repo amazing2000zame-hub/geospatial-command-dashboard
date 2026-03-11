@@ -7,16 +7,15 @@ import { useUiStore } from '../store/uiStore';
 import { registerFeature, clearLayerFeatures } from '../store/featureRegistry';
 import type { LayerFeature } from '../types/geojson';
 
-const LAYER_ID = 'traffic_cameras';
-const ICON_SIZE = 32;
+const LAYER_ID = 'dispatch';
 
 const iconCache = new Map<string, HTMLCanvasElement>();
 
-function createCameraIcon(): HTMLCanvasElement {
-  const key = 'traffic_camera_icon';
+function createDispatchIcon(category: string): HTMLCanvasElement {
+  const key = `dispatch_${category}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
 
-  const s = ICON_SIZE;
+  const s = 28;
   const canvas = document.createElement('canvas');
   canvas.width = s;
   canvas.height = s;
@@ -24,40 +23,30 @@ function createCameraIcon(): HTMLCanvasElement {
   const cx = s / 2;
   const cy = s / 2;
 
-  // Outer ring - thin cyan outline
+  const isFire = category === 'fire';
+  const color = isFire ? '#ff6b35' : '#38bdf8';
+
+  // Outer ring
   ctx.beginPath();
   ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(0, 200, 210, 0.9)';
+  ctx.fillStyle = `${color}22`;
+  ctx.fill();
+  ctx.strokeStyle = color;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Inner fill - subtle glow
-  ctx.beginPath();
-  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 200, 210, 0.12)';
-  ctx.fill();
-
-  // Crosshair lines
-  ctx.strokeStyle = 'rgba(0, 200, 210, 0.6)';
-  ctx.lineWidth = 1;
-  // Horizontal
-  ctx.beginPath(); ctx.moveTo(cx - 6, cy); ctx.lineTo(cx - 3, cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 3, cy); ctx.lineTo(cx + 6, cy); ctx.stroke();
-  // Vertical
-  ctx.beginPath(); ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy - 3); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx, cy + 6); ctx.stroke();
-
-  // Center dot
-  ctx.beginPath();
-  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 200, 210, 0.95)';
-  ctx.fill();
+  // Icon
+  ctx.fillStyle = color;
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(isFire ? '\u{1F525}' : '+', cx, cy);
 
   iconCache.set(key, canvas);
   return canvas;
 }
 
-function TrafficCameraLayer() {
+function DispatchLayer() {
   const { viewer } = useCesium();
   const { data, loading, error } = useLayerData(LAYER_ID);
   const visible = useLayerStore((s) => s.layers[LAYER_ID]?.visible ?? true);
@@ -69,7 +58,6 @@ function TrafficCameraLayer() {
   const featureMapRef = useRef<Map<string, LayerFeature>>(new Map());
   const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
 
-  // Create BillboardCollection + click handler
   useEffect(() => {
     if (!viewer) return;
 
@@ -89,41 +77,33 @@ function TrafficCameraLayer() {
     handlerRef.current = handler;
 
     return () => {
-      if (handlerRef.current) {
-        handlerRef.current.destroy();
-        handlerRef.current = null;
-      }
-      if (collectionRef.current && !viewer.isDestroyed()) {
-        viewer.scene.primitives.remove(collectionRef.current);
-      }
+      if (handlerRef.current) { handlerRef.current.destroy(); handlerRef.current = null; }
+      if (collectionRef.current && !viewer.isDestroyed()) viewer.scene.primitives.remove(collectionRef.current);
       collectionRef.current = null;
       featureMapRef.current.clear();
     };
   }, [viewer, selectFeature]);
 
-  // Update billboards when data changes
   useEffect(() => {
     const collection = collectionRef.current;
     if (!collection || !viewer) return;
 
     collection.removeAll();
     featureMapRef.current.clear();
-    clearLayerFeatures('traffic_cam_');
+    clearLayerFeatures('dispatch_');
 
     if (data?.features) {
-      const icon = createCameraIcon();
-
       for (const feature of data.features) {
-        if (!feature.geometry || feature.geometry.type !== 'Point' || !Array.isArray(feature.geometry.coordinates)) continue;
-
+        if (!feature.geometry || feature.geometry.type !== 'Point') continue;
         const [lon, lat] = feature.geometry.coordinates as number[];
         const id = feature.properties.id as string;
+        const category = (feature.properties.category as string) || 'ems';
 
         collection.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat),
-          image: icon,
-          width: ICON_SIZE,
-          height: ICON_SIZE,
+          image: createDispatchIcon(category),
+          width: 28,
+          height: 28,
           id,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
@@ -139,22 +119,17 @@ function TrafficCameraLayer() {
     if (!viewer.isDestroyed()) viewer.scene.requestRender();
   }, [viewer, data, setLayerStatus, setLayerUpdated]);
 
-  // Sync loading/error status
   useEffect(() => {
     if (loading) setLayerStatus(LAYER_ID, 'loading', 0);
     if (error) setLayerStatus(LAYER_ID, 'error', 0, error);
   }, [loading, error, setLayerStatus]);
 
-  // Toggle visibility
   useEffect(() => {
-    const collection = collectionRef.current;
-    if (collection) {
-      collection.show = visible;
-      if (viewer && !viewer.isDestroyed()) viewer.scene.requestRender();
-    }
+    if (collectionRef.current) collectionRef.current.show = visible;
+    if (viewer && !viewer.isDestroyed()) viewer.scene.requestRender();
   }, [viewer, visible]);
 
   return null;
 }
 
-export default TrafficCameraLayer;
+export default DispatchLayer;

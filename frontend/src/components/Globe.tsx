@@ -6,6 +6,7 @@ import {
   ScreenSpaceEventHandler, ScreenSpaceEventType,
   UrlTemplateImageryProvider,
   ImageryLayer,
+  Color,
 } from 'cesium';
 import { useUiStore } from '../store/uiStore';
 
@@ -73,6 +74,13 @@ function Globe({ children, overlays }: GlobeProps) {
       viewer.scene.globe.depthTestAgainstTerrain = false;
       viewer.scene.fog.enabled = true;
       if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = true;
+
+      // Suppress red cross-hatch artifact on failed imagery tiles
+      viewer.scene.globe.baseColor = Color.fromCssColorString('#0a0e14');
+      for (let i = 0; i < viewer.imageryLayers.length; i++) {
+        const layer = viewer.imageryLayers.get(i);
+        layer.imageryProvider.errorEvent.addEventListener(() => true);
+      }
 
       // Disable CesiumJS default entity selection behavior —
       // prevents clicking entities from opening info boxes or new tabs
@@ -143,6 +151,12 @@ function Globe({ children, overlays }: GlobeProps) {
       default:
         viewer.imageryLayers.addImageryProvider(osmProvider);
         break;
+    }
+
+    // Suppress tile error artifacts on new layers
+    for (let i = 0; i < viewer.imageryLayers.length; i++) {
+      const layer = viewer.imageryLayers.get(i);
+      layer.imageryProvider.errorEvent.addEventListener(() => true);
     }
 
     viewer.scene.requestRender();

@@ -161,12 +161,12 @@ function FireLayer() {
         const count = feature.properties.point_count;
         const size = clusterSize(count);
         bc.add({ position, image: createCircleImage(size * 2, CLUSTER_COLOR), width: size * 2, height: size * 2, id: `fire_cluster_${feature.properties.cluster_id}` });
-        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '10px sans-serif', fillColor: Cesium.Color.WHITE, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: 0 });
+        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '10px sans-serif', fillColor: Cesium.Color.WHITE, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: Number.POSITIVE_INFINITY });
       } else {
         const props = feature.properties as LayerFeature['properties'];
         const id = (props?.id as string) ?? `fire_${lon}_${lat}`;
         const frp = (props?.frp as number) || 0;
-        pc.add({ position, pixelSize: Math.max(3, Math.min(6, frp / 20 + 3)), color: frpToColor(frp), outlineColor: Cesium.Color.fromCssColorString('rgba(255, 100, 0, 0.3)'), outlineWidth: 1, id, disableDepthTestDistance: 0 });
+        pc.add({ position, pixelSize: Math.max(3, Math.min(6, frp / 20 + 3)), color: frpToColor(frp), outlineColor: Cesium.Color.fromCssColorString('rgba(255, 100, 0, 0.3)'), outlineWidth: 1, id, disableDepthTestDistance: Number.POSITIVE_INFINITY });
         const feat: LayerFeature = { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] };
         featureMapRef.current.set(id, feat);
         registerFeature(id, feat);

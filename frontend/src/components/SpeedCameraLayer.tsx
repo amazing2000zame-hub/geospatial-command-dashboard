@@ -141,11 +141,11 @@ function SpeedCameraLayer() {
         const count = feature.properties.point_count;
         const size = clusterSize(count);
         bc.add({ position, image: createCircleImage(size * 2, CLUSTER_COLOR), width: size * 2, height: size * 2, id: `speed_cluster_${feature.properties.cluster_id}` });
-        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '11px sans-serif', fillColor: Cesium.Color.BLACK, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: 0 });
+        lc.add({ position, text: count >= 1000 ? `${Math.round(count / 1000)}k` : String(count), font: '11px sans-serif', fillColor: Cesium.Color.BLACK, style: Cesium.LabelStyle.FILL, horizontalOrigin: Cesium.HorizontalOrigin.CENTER, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: Number.POSITIVE_INFINITY });
       } else {
         const props = feature.properties as LayerFeature['properties'];
         const id = (props?.id as string) ?? `speed_${lon}_${lat}`;
-        bc.add({ position, image: createSpeedCameraIcon(), width: 20, height: 20, id, disableDepthTestDistance: 0 });
+        bc.add({ position, image: createSpeedCameraIcon(), width: 20, height: 20, id, disableDepthTestDistance: Number.POSITIVE_INFINITY });
         const feat: LayerFeature = { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: props as LayerFeature['properties'] };
         featureMapRef.current.set(id, feat);
         registerFeature(id, feat);

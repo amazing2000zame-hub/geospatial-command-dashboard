@@ -12,9 +12,12 @@ import { CelesTrakFetcher } from './fetchers/celestrak.js';
 import { TrafficCamFetcher } from './fetchers/trafficcam.js';
 import { FIRMSFetcher } from './fetchers/firms.js';
 import { GDELTConflictFetcher } from './fetchers/gdelt.js';
+import { CrimeFetcher } from './fetchers/crime.js';
+import { DispatchFetcher } from './fetchers/dispatch.js';
 import { NewsRssFetcher } from './fetchers/news-rss.js';
 import { EconomyFetcher } from './fetchers/economy.js';
 import { SituationsFetcher } from './fetchers/situations.js';
+import { ScannerFetcher } from './fetchers/scanner.js';
 import type { ScheduledTask } from 'node-cron';
 
 const config = loadEnv();
@@ -38,6 +41,8 @@ const fetchers = [
   new TrafficCamFetcher(cache, layerNs),
   new FIRMSFetcher(cache, layerNs),
   new GDELTConflictFetcher(cache, layerNs),
+  new CrimeFetcher(cache, layerNs),
+  new DispatchFetcher(cache, layerNs),
 ];
 
 // Start scheduler with staggered initial fetches
@@ -47,12 +52,14 @@ const cronJobs: ScheduledTask[] = startScheduler(fetchers, sourceConfigs);
 const newsRss = new NewsRssFetcher(cache, layerNs);
 const economy = new EconomyFetcher(cache, layerNs);
 const situations = new SituationsFetcher(cache, layerNs);
+const scannerFetcher = new ScannerFetcher(cache, layerNs);
 
-newsRss.start(10 * 60 * 1000);     // every 10 minutes
-economy.start(15 * 60 * 1000);     // every 15 minutes
-situations.start(15 * 60 * 1000);  // every 15 minutes
+newsRss.start(10 * 60 * 1000);      // every 10 minutes
+economy.start(15 * 60 * 1000);      // every 15 minutes
+situations.start(15 * 60 * 1000);   // every 15 minutes
+scannerFetcher.start(5 * 60 * 1000); // every 5 minutes
 
-console.log('[startup] Intel panel fetchers started (news, economy, situations)');
+console.log('[startup] Intel panel fetchers started (news, economy, situations, scanner)');
 
 console.log(
   `[startup] Geospatial Dashboard backend running on port ${config.PORT}`,
@@ -72,6 +79,7 @@ async function shutdown(signal: string): Promise<void> {
   newsRss.stop();
   economy.stop();
   situations.stop();
+  scannerFetcher.stop();
   console.log('[shutdown] Intel fetchers stopped');
 
   // Disconnect Redis

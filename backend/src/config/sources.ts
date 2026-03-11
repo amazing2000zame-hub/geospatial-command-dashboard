@@ -70,4 +70,18 @@ export const sourceConfigs: SourceConfig[] = [
     cacheTTL: 900,
     enabled: true,
   },
+  {
+    sourceId: 'crime_incidents',
+    displayName: 'Crime Incidents (Socrata)',
+    interval: '0 */30 * * * *',
+    cacheTTL: 1800,
+    enabled: true,
+  },
+  {
+    sourceId: 'dispatch',
+    displayName: 'Fire/EMS Dispatch',
+    interval: '0 */5 * * * *',
+    cacheTTL: 300,
+    enabled: true,
+  },
 ];

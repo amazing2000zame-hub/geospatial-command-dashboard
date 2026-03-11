@@ -101,6 +101,7 @@ function EarthquakeLayer() {
           pixelSize: magnitudeToSize(mag),
           color: magnitudeToColor(mag),
           id: id,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
 
         featureMapRef.current.set(id, feature);
